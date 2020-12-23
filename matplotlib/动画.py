@@ -12,5 +12,5 @@ def animate(i):
 def init():
     line.set_ydata(np.sin(x))
     return line,
-ani = animation.FuncAnimation(fig=fig, func=animate, frames=1000000, init_func=init, interval=1, blit=False)
+ani = animation.FuncAnimation(fig=fig, func=animate, frames=10, init_func=init, interval=1, blit=False)
 plt.show()
