@@ -6,6 +6,7 @@ import re
 import requests
 import os
 import time
+import multiprocessing as mp
 def main():
     #---------------------------------------------------
     baseurl = 'https://zh.eehentai.com/g/325447/list2/'
@@ -13,9 +14,13 @@ def main():
     #---------------------------------------------------
     html = askUrl(baseurl)
     imgurllist = getImgurl(html)
-    os.makedirs(f'./source/{foldername}')
-    filepath = f'D:/Project/python/python爬虫/source/{foldername}/'
-    downloadImg(imgurllist, filepath)
+    os.makedirs(f'./spider/source/{foldername}')
+    filepath = f'./spider/source/{foldername}/'
+    
+    # 普通爬 太慢了
+    # downloadImg(imgurllist, filepath)
+    # 多进程爬 NB
+    multiDownload(imgurllist, filepath)
 def askUrl(baseurl):
     print('正在向网站发出请求')
     head = {'User-Agent':'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Mobile Safari/537.36 Edg/87.0.664.57'}
@@ -90,7 +95,32 @@ def downloadImg(imgurlist, filepath):
 
         i += 1
     
+def download(imgurl):
+    #---------------------------------------------------
+    # if i<=108:
+    #     i += 1
+    #     continue
+    #---------------------------------------------------
+    filepath = f'./spider/source/hhh/'
+    filepath = imgurl[2]
+    file = filepath + f'{imgurl[1]}.jpg'
+    r = requests.get(imgurl[0], stream=True)
+    with open(file, 'wb') as f:
+        # f.write(r.content)
+        for chunk in r.iter_content(chunk_size=32):
+            f.write(chunk)
+    #---------------------------------------------------
+    # if i==92: #缺第几张就填几
+    #     break
+    #---------------------------------------------------
 
+
+def multiDownload(imgurllist, filepath):
+    pool = mp.Pool(processes=10)
+    a = []
+    for i in range(len(imgurllist)):
+        a.append(filepath)
+    result = pool.map(download, zip(imgurllist,range(1,len(imgurllist)+1), a))
 
 if __name__ == '__main__':
     main()
