@@ -101,6 +101,7 @@ def download(imgurl):
     #     i += 1
     #     continue
     #---------------------------------------------------
+    print(f'正在下载第{imgurl[1]}张图片')
     filepath = f'./spider/source/hhh/'
     filepath = imgurl[2]
     file = filepath + f'{imgurl[1]}.jpg'
