@@ -34,12 +34,12 @@ for epoch in range(epoch):
         y_pro = tf.nn.softmax(y)
         loss_ce1 = tf.losses.categorical_crossentropy(y_,y_pro)
         loss_ce2 = tf.nn.softmax_cross_entropy_with_logits(y_, y)
-        print(loss_ce1,'+ohmygod+',loss_ce2)
+    # print(loss_ce1,'+ohmygod+',loss_ce2)
         
 
-    grads = tape.gradient(loss, w1)
+    grads = tape.gradient(loss_ce1, w1)
     w1.assign_sub(lr * grads)
     if epoch%500==0:
-        # print(epoch, w1.numpy())
-        pass
-    break
+        print(epoch, loss_ce1, loss_ce2)
+        # pass
+    # break
