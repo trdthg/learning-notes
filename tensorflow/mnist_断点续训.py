@@ -9,9 +9,11 @@ np.set_printoptions(threshold=np.inf) # 超过多少显示省略号,  np.inf为�
 import matplotlib.pyplot as plt
 #--------------------------------------------------------------
 
-fashion_mnist = tf.keras.datasets.fashion_mnist
-(x_train, y_train), (x_test, y_test) = fashion_mnist.load_data()
-x_train, x_test = x_train/255.0, x_test/255.0
+# fashion_mnist = tf.keras.datasets.fashion_mnist
+mnist = tf.keras.datasets.mnist
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
+# (x_train, y_train), (x_test, y_test) = fashion_mnist.load_data()
+x_train, x_test = x_train / 255.0, x_test / 255.0
 
 x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
 img_gen_train = ImageDataGenerator(
@@ -27,7 +29,6 @@ img_gen_train.fit(x_train)
 model = tf.keras.Sequential([
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dense(128, activation='relu'),
-    # tf.keras.layers.Dense(32, activation='sigmoid',kernel_regularizer=tf.keras.regularizers.l2()),
     tf.keras.layers.Dense(10, activation='softmax'),
 ])
 
@@ -37,7 +38,7 @@ model.compile(  optimizer='adam',
 
 # 1.断点续训的实现
 #--------------------------------------------------------------
-checkpoint_save_path = "./tensorflow/savedata/fashion_mnist.ckpt"
+checkpoint_save_path = "./tensorflow/savedata/mnist.ckpt"
 
 if os.path.exists(checkpoint_save_path + '.index'):
     print('-----------------load the model---------------')
@@ -50,7 +51,7 @@ cp_callback = tf.keras.callbacks.ModelCheckpoint(
 )
 history = model.fit(
     # x_train, y_train, batch_size=32, epochs=1,
-    img_gen_train.flow(x_train, y_train, batch_size=32), epochs=1,
+    img_gen_train.flow(x_train, y_train, batch_size=32), epochs=200,
     validation_data = (x_test, y_test),
     validation_freq = 1,
     callbacks = [cp_callback],
