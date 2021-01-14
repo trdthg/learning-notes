@@ -132,7 +132,7 @@ class Spider():
 
 if __name__ == '__main__':
     spider1 = Spider()
-    # spider1.main('https://zha.doghentai.com/g/28857/list2/', './spider/source/Protagonist6/')
+    # spider1.main('https://zh.nyahentai.xyz/g/283000/list2/', './spider/source/魔女的夜宴/')
     spider2 = Spider()
     # spider2.main('https://zha.doghentai.com/g/259422/list2/', './spider/source/anecdoteC95/')
 
