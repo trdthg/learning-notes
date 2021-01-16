@@ -10,8 +10,8 @@ import multiprocessing as mp
  
 def main():
     #---------------------------------------------------
-    baseurl = 'https://zh.eehentai.com/g/325447/list2/'
-    foldername = 'hhh'
+    baseurl = 'https://zh.eehentai.com/g/288413/'
+    foldername = '2'
     #---------------------------------------------------
     html = askUrl(baseurl)
     imgurllist = getImgurl(html)
@@ -98,7 +98,7 @@ def downloadImg(imgurlist, filepath):
     
 def download(imgurl):
     #---------------------------------------------------
-    # if i<=108:
+    # if i<=10:
     #     i += 1
     #     continue
     #---------------------------------------------------
@@ -112,7 +112,7 @@ def download(imgurl):
         for chunk in r.iter_content(chunk_size=32):
             f.write(chunk)
     #---------------------------------------------------
-    # if i==92: #缺第几张就填几
+    # if i==11: #缺第几张就填几
     #     break
     #---------------------------------------------------
 

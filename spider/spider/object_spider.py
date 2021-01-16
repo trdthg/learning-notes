@@ -104,7 +104,7 @@ class Spider():
         
     def download(self, imgurl):
         #---------------------------------------------------
-        # if i<=108:
+        # if i<=10:
         #     i += 1
         #     continue
         #---------------------------------------------------
@@ -118,7 +118,7 @@ class Spider():
             for chunk in r.iter_content(chunk_size=32):
                 f.write(chunk)
         #---------------------------------------------------
-        # if i==92: #缺第几张就填几
+        # if i==11: #缺第几张就填几
         #     break
         #---------------------------------------------------
 
@@ -132,8 +132,8 @@ class Spider():
 
 if __name__ == '__main__':
     spider1 = Spider()
-    # spider1.main('https://zh.nyahentai.xyz/g/283000/list2/', './spider/source/魔女的夜宴/')
+    # spider1.main('https://zh.eehentai.com/g/293201/list2/', './spider/source/15/')
     spider2 = Spider()
-    # spider2.main('https://zha.doghentai.com/g/259422/list2/', './spider/source/anecdoteC95/')
+    spider2.main('https://zh.eehentai.com/g/313314/list2/', './spider/source/14/')
 
     print('---下载完成,爬取完毕---')
