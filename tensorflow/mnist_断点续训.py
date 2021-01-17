@@ -49,6 +49,8 @@ cp_callback = tf.keras.callbacks.ModelCheckpoint(
     save_weights_only = True,
     save_best_only = True,
 )
+
+summary_writer = tf.summary.create_file_writer('./tensorboard')     # 参数为记录文件所保存的目录
 history = model.fit(
     # x_train, y_train, batch_size=32, epochs=1,
     img_gen_train.flow(x_train, y_train, batch_size=32), epochs=200,

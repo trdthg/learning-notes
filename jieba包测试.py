@@ -1,7 +1,7 @@
 import jieba
 import jieba.analyse
 import jieba.posseg as pseg
-txt = "屏幕"
+txt = "屏幕wwwwww上次的个体和融合和"
 a = jieba.cut(txt)
 print(" ".join(a))
 

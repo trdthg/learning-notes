@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-
+# %matplotlib inline
 # 第一个图象
 x=np.linspace(-3,3,50)
 y1 = 2*x+1
