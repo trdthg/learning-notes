@@ -60,7 +60,7 @@ model.compile(
     loss = tf.keras.losses.mean_squared_error,
 )
 
-checkpoint_save_path = './savedata/stock.ckpt'
+checkpoint_save_path = './savedata/stock1.ckpt'
 if os.path.exists(checkpoint_save_path + '.index'):
     print('-----------------load the model------------------')
     model.load_weights(checkpoint_save_path)
