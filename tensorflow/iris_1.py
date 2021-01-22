@@ -11,6 +11,8 @@ print('---begin---')
 print('导入数据集')
 x_data = datasets.load_iris().data
 y_data = datasets.load_iris().target
+print(x_data)
+print(y_data)
 
 print('数据据乱序')
 np.random.seed(116)

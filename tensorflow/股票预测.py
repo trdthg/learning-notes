@@ -52,7 +52,7 @@ model = tf.keras.Sequential([
     Dropout(0.2),  # 随即扔掉一些神经元, 防止过拟合, 可以先设为0, 逐渐调大, 找到最优值
     SimpleRNN(100),
     Dropout(0.2),
-    Dense(1),
+    Dense(10),
 ])
 
 model.compile(
