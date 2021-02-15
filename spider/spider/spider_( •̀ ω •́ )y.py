@@ -10,7 +10,7 @@ import multiprocessing as mp
  
 def main():
     #---------------------------------------------------
-    baseurl = 'https://zh.eehentai.com/g/288413/'
+    baseurl = 'https://zh.nyahentai.xyz/g/309259/list2/'
     foldername = '2'
     #---------------------------------------------------
     html = askUrl(baseurl)
@@ -79,9 +79,9 @@ def downloadImg(imgurlist, filepath):
         time.sleep(1)
         print(f'正在下载第{i}张图片')
         #---------------------------------------------------
-        # if i<=108:
-        #     i += 1
-        #     continue
+        if i<=7:
+            i += 1
+            continue
         #---------------------------------------------------
         file = filepath + f'{i}.jpg'
         r = requests.get(url, stream=True)

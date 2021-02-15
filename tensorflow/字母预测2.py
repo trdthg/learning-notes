@@ -15,6 +15,10 @@ np.random.seed(7)
 np.random.shuffle(x_train)
 tf.random.set_seed(7)
 x_train = np.reshape(x_train, (len(x_train), 1))
+print(x_train.shape)
+print(x_train.shape)
+print(x_train.shape)
+print(x_train.shape)
 y_train = np.array(y_train)
 model = tf.keras.Sequential([
     Embedding(5, 2),

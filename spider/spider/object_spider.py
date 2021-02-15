@@ -104,9 +104,9 @@ class Spider():
         
     def download(self, imgurl):
         #---------------------------------------------------
-        # if i<=10:
-        #     i += 1
-        #     continue
+        if i<=17:
+            i += 1
+            continue
         #---------------------------------------------------
         print(f'正在下载第{imgurl[1]}张图片')
         filepath = f'./spider/source/hhh/'
@@ -134,6 +134,6 @@ if __name__ == '__main__':
     spider1 = Spider()
     # spider1.main('https://zh.eehentai.com/g/293201/list2/', './spider/source/15/')
     spider2 = Spider()
-    spider2.main('https://zh.eehentai.com/g/313314/list2/', './spider/source/14/')
+    spider2.main('https://zh.nyahentai.xyz/g/309259/list2/', './spider/source/17/')
 
     print('---下载完成,爬取完毕---')
