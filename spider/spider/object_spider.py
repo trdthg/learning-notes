@@ -104,9 +104,9 @@ class Spider():
         
     def download(self, imgurl):
         #---------------------------------------------------
-        if i<=17:
-            i += 1
-            continue
+        # if i<=17:
+        #     i += 1
+        #     continue
         #---------------------------------------------------
         print(f'正在下载第{imgurl[1]}张图片')
         filepath = f'./spider/source/hhh/'
