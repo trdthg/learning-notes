@@ -10,8 +10,10 @@ import multiprocessing as mp
  
 def main():
     #---------------------------------------------------
-    baseurl = 'https://zh.nyahentai.xyz/g/309259/list2/'
-    foldername = '2'
+    baseurl = 'https://zh.nyahentai.xyz/g/244502/list2/'
+    baseurl = 'https://zh.nyahentai.xyz/g/297352/list2/'
+    
+    foldername = '3'
     #---------------------------------------------------
     html = askUrl(baseurl)
     imgurllist = getImgurl(html)

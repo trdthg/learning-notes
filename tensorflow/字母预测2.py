@@ -27,6 +27,7 @@ model = tf.keras.Sequential([
 ])
 
 
+
 model.compile(
     optimizer = tf.keras.optimizers.Adam(0.01),
     loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),

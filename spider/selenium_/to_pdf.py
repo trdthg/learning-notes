@@ -3,13 +3,12 @@ from PIL import Image
 import os
 
 def main():
-    print("合成")
     pdf_name = input("请输入合成PDF文件名称：")
     if ".pdf" in pdf_name:
         rea(pdf_name=pdf_name)
     else:
         rea(pdf_name="{}.pdf".format(pdf_name))
-  input("按任意键结束")
+  print('Successfully create your pdf')
 
 def rea(pdf_name):
   file_list = os.listdir('spider/source/1/')
