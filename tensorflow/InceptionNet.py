@@ -44,6 +44,7 @@ class InceptionBlk(Model):
         x4_2 = self.p4_2(x4_1)
         x = tf.concat([x1, x2_2, x3_2, x4_2], axis=3)
         return x
+        
 class Inception10(Model):
     def __init__(self, num_blocks, num_classes, init_ch=16, **kwargs):
         super(Inception10, self).__init__(**kwargs)
