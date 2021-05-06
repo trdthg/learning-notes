@@ -1,3 +1,6 @@
 {
-    "python.pythonPath": "C:\\Users\\YMZ\\anaconda3\\envs\\tf2\\python.exe"
+    "python.pythonPath": "C:\\Users\\YMZ\\anaconda3\\envs\\tf2\\python.exe",
+    "java.project.sourcePaths": [
+        "算法"
+    ]
 }
