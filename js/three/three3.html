@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        #c {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        #info {
+            position: absolute;
+            left: 1em;
+            top: 1em;
+            background-color: black;
+            padding: .5em;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="c"></canvas>
+    <div id="info"></div>
+    <script src="../lib/three.min.js"></script>
+    <script>
+        // 画布
+        const canvas = document.querySelector("#c")
+        // 渲染器
+        const renderer = new THREE.WebGLRenderer({canvas});
+            renderer.setClearColor(0xaaaaaa)
+            renderer.shadowMap.enable = true;
+            function makeCamera(fov = 40) {
+                const aspect = 2;
+                const zNear = 0.1;
+                const zFar = 1000;
+                return new THREE.PerspectiveCamera(fov, aspect, zNear, zFar);
+            }
+        // 摄像机
+        const camera = makeCamera();
+            camera.position.set(8, 4, 10).multiplyScalar(3);
+            camera.lookAt(0,0,0);
+        // 场景图
+        const scene = new THREE.Scene();
+        // 光照
+        {
+            const light = new THREE.DirectionalLight(0xffffff, 1);
+            light.position.set(0, 20, 0);
+            scene.add(light);
+            light.castShadow = true;
+            light.shadow.mapSize.width = 2048;
+            light.shadow.mapSize.height = 2048;
+
+            const d;
+            light.shadow.camera,left = -d;
+            light.shadow.camera,right = d;
+            light.shadow.camera,top = d;
+            light.shadow.camera,bottom = -d;
+            light.shadow.camera.near = 1;
+            light.shadow.camera.far = 50;
+            light.shadow.bias = 0.001;
+        }
+        {
+            const light = new THREE.DirectionalLight(0xffffff, 1);
+            light.position.set(1, 2, 4);
+            scene.add(light);
+        }
+
+
+        // 地面材质
+        const groundMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(50, 50),
+            new THREE.MeshPhongMeterial({color:0xcc8866})
+        )
+            groundMesh.rotation.x = Math.PI * -0.5;
+            groundMesh.receiveShadow = true;
+            scene.add(groundMesh);
+
+        // tank
+        const tank = new THREE.Object3D();
+        scene.add(tank);
+        
+            // 车身
+            const carWidth = 4;
+            const carHeight = 1;
+            const carLength = 8;
+            const bodyMesh = new THREE.Mesh(
+                new THREE.BoxGeometry(carWidth, carHeight, carLength),
+                new THREE.MeshPhongMeterial({color:0x6688aa, })
+            );
+            bodyMesh.position.y = 1.4;
+            bodyMesh.castShadow = true;
+            tank.add(bodyMesh);
+            // 轮子
+            const wheelRadius = 1;
+            const wheelThinkness = 0.5;
+            const wheelSegments = 6
+            const wheelGeomettry = new THREE.CylinderGeometry(wheelRadius, wheelRadius,wheelThinkness,wheelSegments);
+            const wheelMaterial = new THREE.MeshPhongMeterial({color:0x888888});
+            const wheelPositions = [
+                [-carWidth / 2 - wheelThinkness / 2, -carHeight / 2, carLength / 3],
+                [ carWidth / 2 + wheelThinkness / 2, -carHeight / 2, carLength / 3],
+                [-carWidth / 2 - wheelThinkness / 2, -carHeight / 2, 0],
+                [ carWidth / 2 + wheelThinkness / 2, -carHeight / 2, 0],
+                [-carWidth / 2 - wheelThinkness / 2, -carHeight / 2, -carLength / 3],
+                [ carWidth / 2 + wheelThinkness / 2, -carHeight / 2, -carLength / 3],
+            ]
+            const wheelMeshs = wheelPosition.map((position) => {
+                const wheelMesh = new THREE.Mesh(
+                    wheelGeomettry, wheelMaterial
+                )
+                wheelMesh.position.set(...position);
+                wheelMesh.rotation.z = Math.PI * .5;
+                wheelMesh.castShadow = true;
+                bodyMesh.add(mesh);
+                return wheelMesh;
+            });
+            // 炮台 
+                // 台子
+                const domeRadius = 2;
+                const domeWidthSubdivisions = 12;
+                const domeHeightSubdivisions = 12;
+                const domePhiStart = 0;
+                const domePhiEnd = Math.PI * 2;
+                const domeThetaStart = 0;
+                const domeThetaEnd = Math.PI * 5;
+                const domeGeometry = new
+                // 炮管
+
+    </script>
+</body>
+</html>

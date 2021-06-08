@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>My first three.js app</title>
+		<style>
+			body { margin: 0; height: 100%; width: 100%;}
+			canvas { width: 100%; height: 100% }
+		</style>
+	</head>
+<body>
+    <canvas id="app"></canvas>
+        <script src="../lib/three.min.js"></script>
+        <script>
+        // 挂载画布
+        const canvas = document.querySelector("#app");
+        const renderer = new THREE.WebGLRenderer({canvas});
+        const camera = new THREE.PerspectiveCamera(40, 2, 0.1, 1000);
+        const scene = new THREE.Scene();
+        scene.add(new THREE.PointLight(0xFFFFFF, 1))
+
+        camera.position.set(50, 50, 50);
+        camera.up.set(0, 0, 1);
+        camera.lookAt(0, 0, 0);
+        const objects = [];
+
+        // 1.solarSystem
+        const solarSystem = new THREE.Object3D();
+        scene.add(solarSystem);
+        objects.push(solarSystem);
+            // 1. sun
+            const sunMesh = new THREE.Mesh(
+                new THREE.SphereGeometry(1, 6, 6),
+                new THREE.MeshPhongMaterial({emissive: 0xFFFF00})
+            );
+            objects.push(sunMesh);
+            sunMesh.scale.set(5, 5, 5);
+            solarSystem.add(sunMesh)
+            // 2. earthOrbit
+            const earthOrbit = new THREE.Object3D();
+            earthOrbit.position.x = 10;
+            solarSystem.add(earthOrbit);
+                // earth
+                const earthMesh = new THREE.Mesh(
+                    new THREE.SphereGeometry(1, 6, 6),
+                    new THREE.MeshPhongMaterial({color: 0x2233ff, emissive: 0x112244,})
+                );
+                earthOrbit.add(earthMesh);
+                objects.push(earthMesh);
+                // moon
+                const moonMesh = new THREE.Mesh(
+                    new THREE.SphereGeometry(1, 6, 6),
+                    new THREE.MeshPhongMaterial({color: 0x888888, emissive: 0x222222,})
+                );
+                moonMesh.position.x = 2
+                moonMesh.scale.set(.5,.5,.5)
+                // scene.add(earthMesh);
+                // sunMesh.add(earthMesh);
+                // solarSystem.add(earthMesh)
+                earthMesh.add(moonMesh);
+                objects.push(moonMesh);
+
+        objects.forEach((obj) => {
+            const axes = new THREE.AxesHelper();
+            axes.material.depthTest = false;
+            axes.renderOrder = 1;
+            obj.add(axes);
+        })
+        function resizeRendererToDisplaySize(renderer) {
+            const canvas = renderer.domElement;
+            const width = canvas.clientWidth;
+            const height = canvas.clientHeight;
+            const needResize = canvas.width !== width || canvas.height !== height;
+            if (needResize) {
+            renderer.setSize(width, height, false);
+            }
+            return needResize;
+        }
+        function render(time) {
+            time *= 0.001;
+            if (resizeRendererToDisplaySize(renderer)) {
+                const canvas = renderer.domElement;
+                camera.aspect = canvas.clientWidth / canvas.clientHeight;
+                camera.updateProjectionMatrix();
+            }
+            objects.forEach((obj) => {
+                obj.rotation.y = time;
+            });
+            renderer.render(scene, camera);
+            requestAnimationFrame(render);
+        }
+        requestAnimationFrame(render);
+    </script>
+
+</body>
+
+</html>
