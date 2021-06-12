@@ -5,10 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "pwa-msedge",
+            "type": "lldb",
             "request": "launch",
-            "name": "Open three2_1.html",
-            "file": "/home/trdthg/project/js/three/three2_1.html"
+            "name": "Debug",
+            "program": "${workspaceFolder}/<your program>",
+            "args": [],
+            "cwd": "${workspaceFolder}"
         }
     ]
 }

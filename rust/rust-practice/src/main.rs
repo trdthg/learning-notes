@@ -3,22 +3,161 @@ use rand::Rng;
 use std::cmp::Ordering;
 use std::io;
 use std::io::{stdout, BufWriter};
+use std::collections::HashMap;
+
+fn hashMap_test() {
+    // common
+    let mut map = HashMap::new();
+    map.insert(String::from("Blue"), 10);
+    
+    let teams = vec!["blue".to_string(), String::from("green")];
+    let scores = vec![5, 3];
+    let map: HashMap<_, _> = teams.iter().zip(scores).collect();
+
+    let a = String::from("sss");
+    let b = 1;
+    let mut map = HashMap::new();
+    // map.insert(a, b); // 这里插入后，a和b的所有权就被map所有
+    // println!("{}", a); // 不能打印
+    map.insert(&a, &b);  // 把值的指针插入，a，b仍然有效，但是必须保证map也有效
+    println!("{}", a);
+    println!("{}", match map.get(&"sss".to_string()) {
+        Some(i32) => 1,
+        None => 2,
+    });
+    for (key, value) in &map {
+        println!("{}: {}", key, value);
+    }
+    
+    // 默认插入策略是覆盖
+    // 没有时才插入
+    map.entry(&"sss".to_string()).or_insert(&2);
+
+    // 过滤插入
+    let text = "hello world wonderful world";
+    let mut map = HashMap::new();
+    for word in text.split(" ") {
+        let count = map.entry(word).or_insert(0);
+        *count += 1;
+    }
+    println!("{:?}", map);
+
+}
 
 fn main() {
-    guess_number_game();
-    println!("{}", fib(1, 1, 110));
-    loop_and_fn();
-    struct_test();
-    tuple_sruct_test();
-    enum_test_define();
-    enum_test_match();
+    // guess_number_game();
+    // println!("{}", fib(1, 1, 110));
+    // loop_and_fn();
+    // struct_test();
+    // tuple_sruct_test();
+    // enum_test_define();
+    // enum_test_match();
+    // vec_test();
+    // string_test();
+    hashMap_test();
+}
+
+fn string_test() {
+    // push_str(str)
+    let mut s = "Hello ".to_string();
+    s.push_str("World!");
+    
+    // push, push_str(&str)
+    let mut s2 = "Hello ".to_string();
+    s2.push('-');
+    s2.push('>');
+    s2.push(' ');
+    let s2_ = "World!";
+    s2.push_str(s2_);
+    println!("{} {}",s2, s2_);
+
+    // +, format!
+    let s1 = String::from("Hello ");
+    let s2 = String::from("World!");
+    let s3 = s1 + &s2;
+    println!("{}", s2); // s1无法打印，+ 运算符时调用的函数签名
+    /*
+    官方解释类似于这样：fn add(self, s: &str) -> String {
+    &s2（&String）被强转为了 &str，当add调用时，&s2被变成了&s2[..],
+    add没有获得str的所有权，所以s2仍然有效 
+    */
+
+    let s1 = String::from("tic");
+    let s2 = String::from("tac");
+    let s3 = String::from("toe");
+    // let s = s1 + "-" + &s2 + "-" + &s3; // 不是拷贝，需要获取s1的所有权
+    let s = format!("{}-{}-{}", s1, s2, s3); // 返回一个新的字符串，不会获取所有权
+
+    // String不支持索引
+    /*
+    String 是一个 Vec<u8> 的封装
+    1. "Hola"  
+        len->4*1 
+        这里每一个字母的 UTF-8 编码都占用一个字节
+    2. "Здравствуйте" 
+        len->12*2  
+        这里每个 Unicode 标量值需要两个字节存储。因此一个字符串字节值的索引并不总是对应一个有效的 Unicode 标量值
+    3. “नमस्ते”
+        len-> 6*3 他的u8 ->[224, 164, 168, 224, 164, 174, 224, 164, 184, 224, 165, 141, 224, 164, 164, 224, 165, 135]
+    */
+
+    // slice获取片段
+    let hello = "Здравствуйте";
+    println!("{}", &hello[0..4]); // 需要准确指定长度，这里是4对应两个字符
+    // 遍历字符串
+    for c in "नमस्ते".chars() {println!("{}", c)};
+    for c in "नमस्ते".bytes() {println!("{}", c)};
+
+
+
+}
+
+fn vec_test() {
+    // common
+    let mut v1: Vec<i32> = Vec::new();
+    let v2 = vec![1,2,3];
+    v1.push(1);
+    let a: i32 = v2[1];
+    let b: &i32 = &v2[1]; 
+    // let c = &v2[3]; // 若越界则程序直接停止
+    match v2.get(3) {
+        Some(b) => println!("{}", b),
+        None => println!("越界"),
+    }
+    println!("{} {}", a, b);
+
+    // 不能先取出Vec中的某个元素，之后再向Vec中push新元素，扩容会重新分配元素的内存
+
+    // loop
+    for i in v2 {
+        println!("{}", i);
+    }
+    
+    let mut v = vec![100, 32, 57];
+    for i in &mut v {
+        *i += 50;
+    }
+
+    // enum
+    enum SpreadsheetCell {
+        Int(i32),
+        Float(f64),
+        String(String),
+    }
+    let row = vec![
+        SpreadsheetCell::Int(12),
+        SpreadsheetCell::Float(0.5),
+        SpreadsheetCell::String(String::from("row中的第三个枚举类")),
+    ];
+
+
+
 }
 
 fn guess_number_game() {
     say_hello();
     println!("This is the start {}", '😻');
     let secret_number = rand::thread_rng().gen_range(1..6);
-
     loop {
         println!("Please input your number");
         let foo = rand::thread_rng().gen_range(1..6);
@@ -265,7 +404,7 @@ fn enum_test_match() {
     println!("{}, {}", value_in_cents(Coin::Dime), value_in_cents(coin));
 
     // _ 通配符
-    fn switch_case(a: u8) ->u8 {
+    fn switch_case(a: u8) {
         match a {
             1 => println!("one"),
             2 => println!("two"),
@@ -274,9 +413,9 @@ fn enum_test_match() {
         }
     }
 
-    if let Coin::Quarter(Alabama) = coin {
-        println!("")
-    }
+    // if let Coin::Quarter(UsState::Alabama) = coin {
+    //     println!("")
+    // }
 
 
 }
