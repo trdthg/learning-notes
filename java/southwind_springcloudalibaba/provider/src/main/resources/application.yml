@@ -1,0 +1,10 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        server: provider
+  application:
+    name: provider
+server:
+  port: 8081

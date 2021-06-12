@@ -1,0 +1,15 @@
+
+server:
+  port: 8090
+
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+  application:
+    name: consumer
+#
+#provider:
+#  ribbon:
+#    NFloadBalancerRuleClassName: com.netfilx.loadbalancer.RandomRule
