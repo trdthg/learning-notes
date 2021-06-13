@@ -6,6 +6,9 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[profile.release]
+panic = 'abort'  # 发行版崩溃时用直接终止代替展开，减少release文件大小
+
 [dependencies]
 ferris-says="0.2"
 rand="0.8.3"

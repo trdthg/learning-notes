@@ -4,6 +4,151 @@ use std::cmp::Ordering;
 use std::io;
 use std::io::{stdout, BufWriter};
 use std::collections::HashMap;
+use std::fs::File;
+use io::ErrorKind;
+use std::io::Read;
+
+fn normal_guess_game() {
+    let secret_number = rand::thread_rng().gen_range(1..6);
+    let mut i:u32 = 0;
+    let mut j:u32 = 0;
+    loop {
+        let guess = rand::thread_rng().gen_range(-10..10);
+        i += 1;
+        if guess < 1 || guess > 5 {
+            j += 1;
+            continue;
+        }
+        match guess.cmp(&secret_number) {
+            Ordering::Equal => {
+                println!("猜对了，共猜了{}次,范围不对有{}次", i, j);
+                break;
+            },
+            _ => continue,
+        }
+    }
+}
+
+fn safer_guess_game() {
+    pub struct Guess {
+        value: i32,
+    } impl Guess {
+        pub fn new(value: i32) {
+            if value < 1 || value > 5 {
+                panic!("范围不对")
+            } else {
+                Guess {value};
+            }
+        }
+        pub fn value(&self) {
+            self.value;
+        }
+    }
+
+}
+
+use std::error::Error;
+fn main() -> Result<(), Box<dyn Error>>{
+    // guess_number_game();
+    // println!("{}", fib(1, 1, 110));
+    // loop_and_fn();
+    // struct_test();
+    // tuple_sruct_test();
+    // enum_test_define();
+    // enum_test_match();
+    // vec_test();
+    // string_test();
+    // hashMap_test();
+    
+    // panic_test();
+    safer_guess_game();
+    let f = File::open("hello.txt")?;
+    Ok(())
+
+
+
+}
+
+fn panic_test() {
+    // panic!("主动崩溃了");
+
+    // let a = vec![1,2,3];
+    // a[99];
+
+    // let f = File::open("hello.txt");
+    // 简单的处理
+    // let f = match f {
+    //     Ok(file) => file,
+    //     Err(error) => {
+    //         panic!("可能没有该文件{:?}", error)
+    //     }
+    // };
+
+    // 更丰富的错误类型处理
+    // let f = match f {
+    //     Ok(file) => file,
+    //     // Err(error) => {
+    //     //     panic!("可能没有该文件{:?}", error)
+    //     // }
+    //     Err(error) => match error.kind() {
+    //         ErrorKind::NotFound => match File::create("hello.txt") {
+    //             Ok(fc) => fc,
+    //             Err(error) => panic!("创建文件失败：{}", error),
+    //         },
+    //         other_error => panic!("未知错误，可能没有权限{}", error),
+    //     }
+    // };
+
+    // 去掉了大量的match表达式
+    // let f = File::open("hello.txt").unwrap_or_else(|error| {
+    //     if error.kind() == ErrorKind::NotFound {
+    //         File::create("hello.txt").unwrap_or_else(|error| {
+    //             panic!("打开文件失败{}", error);
+    //         })
+    //     } else {
+    //         panic!("是文件打开失败之外的其他错误");
+    //     }
+    // });
+
+    // let f = File::open("hello.txt").unwrap();  // unwrap返回Ok或Err（直接调用panic！）
+    // let f = File::open("hello.txt").expect("反正报错了"); // 与unwrap相比，不会使用原生panic信息，更容易找到错误原因
+
+    // 传播错误
+    // fn read_username_from_file() -> Result<String, io::Error> {
+    //     let f = File::open("hello.txt");
+    //     let mut f = match f {
+    //         Ok(file) => file,
+    //         Err(e) => return Err(e),
+    //     };
+    //     let mut s = String::new();
+    //     match f.read_to_string(&mut s) {
+    //         Ok(_) => Ok(s),
+    //         Err(e) => Err(e),
+    //     }
+    // }
+    // read_username_from_file().expect("msg: &str");
+
+    // 传播错误的简写：？运算符
+    // fn read_username_from_file() -> Result<String, io::Error> {
+    //     let mut f = File::open("hello.txt")?;
+    //     let mut s = String::new();
+    //     f.read_to_string(&mut s)?;
+    //     Ok(s)
+    // }
+    
+    // ? 加链式法则进一步简化
+    // fn read_username_from_file() -> Result<String,io::Error>{
+    //     let mut s = String::new();
+    //     let mut f = File::open("hello.txt")?.read_to_string(&mut s)?;
+    //     Ok(s)
+    // }
+
+    // read_file_to_String的官方解法
+    // use std::fs;
+    // fn read_username_from_file() {
+    //     let mut s = fs::read_to_string("hello.txt");
+    // }
+}
 
 fn hashMap_test() {
     // common
@@ -42,19 +187,6 @@ fn hashMap_test() {
     }
     println!("{:?}", map);
 
-}
-
-fn main() {
-    // guess_number_game();
-    // println!("{}", fib(1, 1, 110));
-    // loop_and_fn();
-    // struct_test();
-    // tuple_sruct_test();
-    // enum_test_define();
-    // enum_test_match();
-    // vec_test();
-    // string_test();
-    hashMap_test();
 }
 
 fn string_test() {
