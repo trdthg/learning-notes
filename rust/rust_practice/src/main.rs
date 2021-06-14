@@ -8,6 +8,244 @@ use std::fs::File;
 use io::ErrorKind;
 use std::io::Read;
 
+fn lifetime_test() {
+    // let r;
+    // {
+    //     let x = 5;
+    //     r = &x;
+    // }
+
+    // println!("{}", r);
+
+    // 记住通过在函数签名中指定生命周期参数时，
+    // 我们并没有改变任何传入值或返回值的生命周期，
+    // 而是指出任何不满足这个约束条件的值都将被借用检查器拒绝。
+    // fn longest<'a, 'b>(x: &'a str, y: &'a str) -> &'a str {
+    //     if x.len() > y.len() {
+    //         x
+    //     } else {
+    //         y
+    //     }
+    // }
+    // // 1.
+    // let string1 = String::from("abcd");
+    // let string2 = "xyz";
+    // let result = longest(string1.as_str(), string2);
+    // println!("The longest string is {}", result);
+    // // 2.
+    // let string1 = String::from("abcd");
+    // {
+    //     let string2 = String::from("xyz");
+    //     let result = longest(string1.as_str(), string2.as_str());
+    //     println!("The longest string is {}", result);
+    // }
+    // // 3. 报错
+    // let string1 = String::from("abcd");
+    // let result;
+    // {
+    //     let string2 = String::from("xyz");
+    //     result = longest(string1.as_str(), string2.as_str());
+    // }
+    // println!("The longest string is {}", result);
+
+    // 存储引用的结构体
+    // 这个注解意味着 ImportantExcerpt 的实例不能比其 part 字段中的引用存在的更久。
+    struct ImportantExcerpt<'a> {
+        part: &'a str,
+    }
+    let a = String::from("hello world");
+    let first = a.split(" ")
+        .next()
+        .expect("sss");
+    let i = ImportantExcerpt { part: first };
+
+    // 编译器采用三条规则来判断引用何时不需要明确的注解。第一条规则适用于输入生命周期，后两条规则适用于输出生命周期。如果编译器检查完这三条规则后仍然存在没有计算出生命周期的引用，编译器将会停止并生成错误。这些规则适用于 fn 定义，以及 impl 块。
+    // 第一条规则是每一个是引用的参数都有它自己的生命周期参数。换句话说就是，有一个引用参数的函数有一个生命周期参数：fn foo<'a>(x: &'a i32)，有两个引用参数的函数有两个不同的生命周期参数，fn foo<'a, 'b>(x: &'a i32, y: &'b i32)，依此类推。
+    // 第二条规则是如果只有一个输入生命周期参数，那么它被赋予所有输出生命周期参数：fn foo<'a>(x: &'a i32) -> &'a i32。
+    // 第三条规则是如果方法有多个输入生命周期参数并且其中一个参数是 &self 或 &mut self，说明是个对象的方法(method)(译者注： 这里涉及rust的面向对象参见17章), 那么所有输出生命周期参数被赋予 self 的生命周期。第三条规则使得方法更容易读写，因为只需更少的符号。
+    impl<'a> ImportantExcerpt<'a> {
+        fn level(&self) -> i32 {
+            3
+        }
+        fn announce_and_return_part(&self, announcement: &str) -> &str {
+            println!("Attention please: {}", announcement);
+            self.part
+        }
+    }
+    // 静态生命周期，总是存活
+    let s: &'static str = "I have a static lifetime.";
+
+    // 完整小应用
+    use std::fmt::Display;
+    fn longest_with_an_announcement<'a, T>(x: &'a str, y: &'a str, ann: T) 
+        -> &'a str
+        where T: Display
+        {
+            println!("Announcement! {}", ann);
+            if x.len() > y.len() {
+                x
+            } else {
+                y
+            }
+        }
+
+}
+
+use std::error::Error;
+fn main() -> Result<(), Box<dyn Error>>{
+    // guess_number_game();
+    // println!("{}", fib(1, 1, 110));
+    // loop_and_fn();
+    // struct_test();
+    // tuple_sruct_test();
+    // enum_test_define();
+    // enum_test_match();
+    // vec_test();
+    // string_test();
+    // hashMap_test();
+    // panic_test();
+    // safer_guess_game();
+    // T_test();
+    // trait_test();
+    lifetime_test();
+    println!("---End---");
+    let f = File::open("hello.txt")?;
+    Ok(())
+
+}
+
+fn trait_test() {
+
+    // 配合lib.rs食用
+    use rust_practice::Summary;
+    use rust_practice::Tweet;
+    use rust_practice::NewsArticle;
+    let tweet = Tweet {
+        username: String::from("horse_ebooks"),
+        content: String::from("of course, as you probably already know, people"),
+        reply: false,
+        retweet: false,
+    };
+    
+    println!("1 new tweet: {}", tweet.summarize());
+    let article = NewsArticle {
+        headline: String::from("Penguins win the Stanley Cup Championship!"),
+        location: String::from("Pittsburgh, PA, USA"),
+        author: String::from("Iceburgh"),
+        content: String::from("The Pittsburgh Penguins once again are the best
+        hockey team in the NHL."),
+    };
+    
+    println!("New article available! {}", article.summarize2());
+    println!("New article available! {}", article.summarize3());
+
+
+    pub fn notify1(item: impl Summary) {
+        println!("Breaking news! {}", item.summarize());
+    }
+    notify1(tweet);
+    notify1(article);
+    pub fn notify2<T: Summary>(item: T) {
+        println!("Breaking news! {}", item.summarize());
+    }
+
+    pub fn notify1_2(item1: impl Summary, item2: impl Summary) {}
+    pub fn notify2_2<T: Summary>(item1: T, item2: T) {}
+
+    use rust_practice::Summary2;
+    pub fn notify3(item: impl Summary + Summary2) {}
+    pub fn notify3_2<T: Summary + Summary2>(item: T) {}
+
+    pub fn notify4<T, U>(t: T, u: U) -> impl Summary 
+        where T: Summary + Clone,
+              U: Clone + Summary2
+        {Tweet {username: String::from("s"),content: String::from("s"),reply: false,retweet: false,}}
+
+    use std::fmt::Display;
+    struct Pire<T> {
+        x: T,
+        y: T,
+    }
+    impl<T> Pire<T> {
+        fn new(x: T, y: T) -> Self {
+            Self {
+                x: x,
+                y: y,
+            }
+        }
+    }
+    impl<T: Display + PartialOrd> Pire<T> {
+        fn cmp_display(&self) {
+            if self.x == self.y {
+                println!("");
+            }
+        }
+    }
+}
+
+fn T_test() {
+    
+    fn largest<T: PartialOrd + Copy>(list: &[T]) -> T {
+        let mut largest = list[0];
+        for &item in list.iter() {
+            if item > largest {
+                largest = item;
+            }
+        }
+        largest
+    }
+   
+    struct Point<T> {
+        x: T,
+        y: T,
+    }
+    let integer = Point { x: 5, y: 10 };
+    let float = Point { x: 1.0, y: 4.0 };
+    impl<T> Point<T> {
+        fn getX(&self) -> &T {
+            &self.x
+        }
+    }
+    impl Point<i32> {
+        fn getY(&self) -> i32 {
+            self.y
+        }
+    }
+    println!("{}", integer.getX());
+    println!("{}", integer.getY());
+    println!("{}", integer.y);
+
+
+    #[derive(Debug)]
+    struct Point2<T, U> {
+        x: T,
+        y: U,
+    }
+    let point1 = Point2 { x: 5, y: 4.0 };
+    impl<T, U> Point2<T, U>{
+        fn mixup<V, W>(self, other: Point2<V, W>) -> Point2<T, W> {
+            Point2 {
+                x: self.x,
+                y: other.y,
+            }
+        }
+    }
+    let point2 = point1.mixup(Point2 {x: 5.0, y: 4});
+    println!("{:?}", point2);
+
+
+    enum Option<T> {
+        Some(T),
+        None,
+    }
+    enum Result<T, E> {
+        Ok(T),
+        Err(E),
+    }
+}
+    
+
+
 fn normal_guess_game() {
     let secret_number = rand::thread_rng().gen_range(1..6);
     let mut i:u32 = 0;
@@ -44,28 +282,6 @@ fn safer_guess_game() {
             self.value;
         }
     }
-
-}
-
-use std::error::Error;
-fn main() -> Result<(), Box<dyn Error>>{
-    // guess_number_game();
-    // println!("{}", fib(1, 1, 110));
-    // loop_and_fn();
-    // struct_test();
-    // tuple_sruct_test();
-    // enum_test_define();
-    // enum_test_match();
-    // vec_test();
-    // string_test();
-    // hashMap_test();
-    
-    // panic_test();
-    safer_guess_game();
-    let f = File::open("hello.txt")?;
-    Ok(())
-
-
 
 }
 

@@ -81,7 +81,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust-practice"
+name = "rust_practice"
 version = "0.1.0"
 dependencies = [
  "ferris-says",
