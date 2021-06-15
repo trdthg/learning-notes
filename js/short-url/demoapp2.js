@@ -12,7 +12,7 @@ app.use(express.json())
 
 app.post("/create", async (request, response) => {
   const {url, slug = nanoid(6)} = request.body
-  // 添加逻辑判断
+  // 逻辑判断...
   await db.collection('links').add({slug, url}) // add方法是异步执行，需要await async
   response.send({ link: 'https://localhost:3080/' + slug }) 
 })
