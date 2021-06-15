@@ -8,6 +8,31 @@ use std::fs::File;
 use io::ErrorKind;
 use std::io::Read;
 
+
+
+use std::error::Error;
+fn main() -> Result<(), Box<dyn Error>>{
+    // guess_number_game();
+    // println!("{}", fib(1, 1, 110));
+    // loop_and_fn();
+    // struct_test();
+    // tuple_sruct_test();
+    // enum_test_define();
+    // enum_test_match();
+    // vec_test();
+    // string_test();
+    // hashMap_test();
+    // panic_test();
+    // safer_guess_game();
+    // T_test();
+    // trait_test();
+    lifetime_test();
+    println!("---End---");
+    let f = File::open("hello.txt")?;
+    Ok(())
+
+}
+
 fn lifetime_test() {
     // let r;
     // {
@@ -77,7 +102,8 @@ fn lifetime_test() {
 
     // 完整小应用
     use std::fmt::Display;
-    fn longest_with_an_announcement<'a, T>(x: &'a str, y: &'a str, ann: T) 
+    fn longest_with_an_announcement
+        <'a, T>(x: &'a str, y: &'a str, ann: T) 
         -> &'a str
         where T: Display
         {
@@ -88,29 +114,6 @@ fn lifetime_test() {
                 y
             }
         }
-
-}
-
-use std::error::Error;
-fn main() -> Result<(), Box<dyn Error>>{
-    // guess_number_game();
-    // println!("{}", fib(1, 1, 110));
-    // loop_and_fn();
-    // struct_test();
-    // tuple_sruct_test();
-    // enum_test_define();
-    // enum_test_match();
-    // vec_test();
-    // string_test();
-    // hashMap_test();
-    // panic_test();
-    // safer_guess_game();
-    // T_test();
-    // trait_test();
-    lifetime_test();
-    println!("---End---");
-    let f = File::open("hello.txt")?;
-    Ok(())
 
 }
 
