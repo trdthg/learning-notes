@@ -10,7 +10,23 @@ const app = express();
 
 app.use(express.json())
 
+app.use(function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "X-Requested-With");
+  res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
+  next();
+});
+
+app.all('/*', function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS');
+  res.header("Access-Control-Allow-Headers", "X-Requested-With");
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  next();
+});
+
 app.post("/create", async (request, response) => {
+  console.log(1);
   const {url, slug = nanoid(6)} = request.body
   // 逻辑判断...
   await db.collection('links').add({slug, url}) // add方法是异步执行，需要await async
@@ -25,5 +41,10 @@ app.get('/:slug', async (req, res) => {
     
     res.send(link)
 })
+
+// 与上一个冲突
+// app.get('/get', (req, res) => {
+//   res.send({data: "www"})
+// })
 
 module.exports = app;
