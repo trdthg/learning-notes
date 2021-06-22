@@ -1,0 +1,28 @@
+app: express-starter
+component: scf
+inputs:
+  cls:
+    logsetId: 9343af72-43c3-448f-b881-6d5f0aa62b62
+    topicId: ba225d4b-1f2d-427b-a2db-e773c8a4dd6c
+  description: 无服务器执行环境，帮助您在无需购买和管理服务器的情况下运行代码
+  eip: false
+  enableRoleAuth: true
+  environment:
+    variables:
+      TCB_COMMIT_ID: ''
+  events: []
+  handler: tcbindex.main
+  memorySize: 128
+  name: express-starter
+  namespace: trdthg01-7gv153f3cff57b02
+  publicAccess: true
+  region: ap-shanghai
+  role: TCB_QcsRole
+  runtime: Nodejs10.15
+  src: ./src
+  timeout: 5
+name: ap-shanghai_trdthg01-7gv153f3cff57b02_express-starter
+org: '1306147581'
+stage: dev
+# When using this configuration file for deployment, make sure the file name is "serverless.yml".
+# For more information: https://github.com/serverless-components/tencent-scf/blob/master/docs/configure.md

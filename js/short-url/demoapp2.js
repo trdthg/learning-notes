@@ -2,6 +2,8 @@ const express = require("express")
 const { init } = require("@cloudbase/node-sdk")
 const {nanoid} = require('nanoid')
 
+
+
 const tcb = init({ env:'hello-cloudbase-5gsjfurqb730a0c8', secretId:'AKIDdBWeYDdqtpX0GH2ZruhEj146vUotjKju', secretKey:'ziCQP8bpnWzC9qHTQ7ZliRvAAuQksmRr'})
 
 const db = tcb.database();
