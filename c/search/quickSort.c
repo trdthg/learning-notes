@@ -1,21 +1,8 @@
-/*****************************************************
-File name：Quicksort
-Author：Zhengqijun    Version:1.0    Date: 2016/11/04
-Description: 对数组进行快速排序
-Funcion List: 实现快速排序算法
-*****************************************************/
- 
 #include <stdio.h>
 #include <stdlib.h>
  
 #define BUF_SIZE 10
  
-/**************************************************
- *函数名：display
- *作用：打印数组元素
- *参数：array - 打印的数组，maxlen - 数组元素个数
- *返回值：无
- **************************************************/
 void display(int array[], int maxlen)
 {
     int i;
@@ -28,56 +15,35 @@ void display(int array[], int maxlen)
  
     return ;
 }
- 
-/************************************
- *函数名：QuickSort
- *作用：快速排序算法
- *参数：
- *返回值：无
- ************************************/
-void QuickSort(int *arr, int low, int high)
-{
-    if (low < high)
-    {
-        int i = low;
-        int j = high;
-        int k = arr[low];
-        while (i < j)
-        {
-            while(i < j && arr[j] >= k)     // 从右向左找第一个小于k的数
-            {
-                j--;
+
+void QuickSort(int *array, int lo, int hi) {
+    if (lo < hi) {
+        int left = lo, right = hi;
+        int target = array[lo];
+        // while循环每次排两个
+        while (left < right) {
+            while (left < right && array[right] >= target) { 
+                right -= 1;
+            } if (left < right) {
+                array[left] = array[right];
+                left += 1;
             }
- 
-            if(i < j)
-            {
-                arr[i++] = arr[j];
-            }
- 
-            while(i < j && arr[i] < k)      // 从左向右找第一个大于等于k的数
-            {
-                i++;
-            }
- 
-            if(i < j)
-            {
-                arr[j--] = arr[i];
-            }
+            while (left < right && array[left] <= target) {
+                left += 1;
+            } if (left < right) {
+                array[right] = array[left];
+                right -= 1;
+            } 
         }
- 
-        arr[i] = k;
- 
-        // 递归调用
-        QuickSort(arr, low, i - 1);     // 排序k左边
-        QuickSort(arr, i + 1, high);    // 排序k右边
+        array[left] = target;
+        QuickSort(array, lo, left - 1);
+        QuickSort(array, left + 1, hi);
     }
 }
- 
 // 主函数
 int main()
 {
     int array[BUF_SIZE] = {12,85,25,16,34,23,49,95,17,61};
-    int array[BUF_SIZE] = {12,61,25,16,34,23,49,17,85,95};
     int maxlen = BUF_SIZE;
     
     printf("排序前的数组\n");
