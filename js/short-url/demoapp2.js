@@ -3,6 +3,7 @@ const { init } = require("@cloudbase/node-sdk")
 const {nanoid} = require('nanoid')
 
 
+// appid: 1306147581
 
 const tcb = init({ env:'hello-cloudbase-5gsjfurqb730a0c8', secretId:'AKIDdBWeYDdqtpX0GH2ZruhEj146vUotjKju', secretKey:'ziCQP8bpnWzC9qHTQ7ZliRvAAuQksmRr'})
 

@@ -1,22 +1,24 @@
 #include <stdio.h>
 
+
 int Bin_Search(int *num,int cnt,int target)
 {
 	int left = 0;
     int right = cnt - 1;
-    int mid;
+    int middle;
     while (left < right) {
-        mid = (left + right) / 2;
-        if (num[mid] > target) {
-            right = mid - 1;
-        } else if (num[mid] < target) {
-            left = mid + 1;
+        middle = (left + right) / 2;
+        if (num[middle] < target) {
+            left = middle;
+        } else if (num[middle] > target) {
+            right = middle;
         } else {
-            return 1;
+            return 0;
         }
     }
-	return 0;
+	return 1;
 }
+
 
 int main(void)
 {
@@ -26,3 +28,4 @@ int main(void)
     printf("%d\n", flag);
 	return 0;
 }
+
