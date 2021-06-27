@@ -6,7 +6,7 @@ router.get('/', function(req, res, next) {
   res.send('respond with a resource');
 });
 
-router.get("/yym_automap", function (req, res, next) {
+router.get("/automap", function (req, res, next) {
     res.render("yym_automap", { title: "Tencent CloudBase + Express" })
 });
 
