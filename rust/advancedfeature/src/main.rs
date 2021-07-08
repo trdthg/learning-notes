@@ -1,11 +1,221 @@
 fn main() {
-    // unsafe_test();
-    // extern_test();
+    unsafe_test();
+    extern_test();
     static_test();
 
+    defaultT_and_add();
+    RHS_test();
+    call_same_name_methods();
+    super_trait_test();
+    overrideFmn();
+
+    newtype_test();
+
+    fn_pointer();
+}
+//-------------------PART IV--------------------
+fn fn_pointer() {
+    fn add_one(x: i32) -> i32 {
+        x + 1
+    }
+    fn do_twice(f: fn(i32) -> i32, arg: i32) -> i32 {
+        f(arg) + f(arg)
+    }
+    let answer = do_twice(add_one, 1);
+    println!("{}", answer);
+
+    let list_of_numbers = vec![1, 2, 3];
+    let list_of_strings: Vec<String> = list_of_numbers
+        .iter()
+        .map(|i| i.to_string()) // 传递闭包
+        .collect();
+    let list_of_strings: Vec<String> = list_of_numbers
+        .iter()
+        .map(ToString::to_string) // 传递函数
+        .collect();
+
+    enum Status {
+        Value(u32),
+        Stop,
+    }
+    let list_of_statuses: Vec<Status> = 
+        (0u32..20)
+        .map(Status::Value)
+        .collect();
+
+    // 返回闭包
+    // fn return_closure() -> Fn(i32) -> i32 {
+    //     |x| x + 1
+    // }
+    fn return_closure() -> Box<dyn Fn(i32) -> i32> {
+        Box::new(|x| x + 1)
+    }
+
+    // 返回函数
+    fn return_fn() -> fn(i32) -> i32 {
+        |x| x + 1
+    }
+    println!("{}", return_fn()(1)) ;
+    println!("{}", return_closure()(1)) ;
 }
 
 
+//-------------------PART III-------------------
+fn newtype_test() {
+    type Kilometers = i32;
+    let x: i32 = 5;
+    let y: Kilometers = 5;
+
+    type Thunk = Box<dyn Fn() + Send + 'static>;
+    let f: Thunk = Box::new(|| println!("hi!"));
+    println!("{},{},{}", x, y, x + y);
+    use std::io::Error;
+    use std::fmt;
+    // trait Write {
+    //     fn write(&mut self, buf: &[u8]) -> Result<usize, Error>;
+    //     fn flush(&mut self) -> Result<(), Error>;
+    //     fn write_all(&mut self, buf: &[u8]) -> Result<(), Error>;
+    //     fn flush_all(&mut self, fmt: fmt::Arguments) -> Result<(), Error>;
+    // }
+    type Result<T> = std::result::Result<T, Error>;
+    trait Write {
+        fn write(&mut self, buf: &[u8]) -> Result<usize>;
+        fn flush(&mut self) -> Result<()>;
+        fn write_all(&mut self, buf: &[u8]) -> Result<()>;
+        fn flush_all(&mut self, fmt: fmt::Arguments) -> Result<()>;
+    }
+}
+
+
+//-------------------PART II--------------------
+fn defaultT_and_add() {
+    use std::ops::Add;
+    #[derive(Debug)]
+    struct Point {
+        x: i32,
+        y: i32,
+    }
+    impl Add for Point {
+        type Output = Point;
+        fn add(self, other: Point) -> Point {
+            Point {
+                x: self.x + other.x,
+                y: self.y + other.y,
+            }
+        }
+    }
+    println!("{:?}", Point{x:1,y:2} + Point{x:2,y:1});
+}
+
+fn RHS_test() {
+    use std::ops::Add;
+    #[derive(Debug)]
+    struct Millimeters(u32);
+    #[derive(Debug)]
+    struct Meters(u32);
+    impl Add<Meters> for Millimeters {
+        type Output = Millimeters;
+        fn add(self, other: Meters) -> Millimeters {
+            Millimeters(self.0 + other.0 * 1000)
+        }
+    }
+    impl Add<Millimeters> for Meters {
+        type Output = Meters;
+        fn add(self, other: Millimeters) -> Meters {
+            Meters(self.0 + other.0 / 1000)
+        }
+    }
+    println!("{:?}", Millimeters(1) + Meters(1));
+    println!("{:?}", Meters(1) + Millimeters(1000));
+}
+
+fn call_same_name_methods() {
+    // 有参
+    trait Polit {
+        fn fly(&self);
+    }
+    trait Wizard {
+        fn fly(&self);
+    }
+    struct Human;
+    impl Polit for Human {
+        fn fly(&self) {
+            println!("I'm a Polit");
+        }
+    }
+    impl Wizard for Human {
+        fn fly(&self) {
+            println!("I'm a Wizard");
+        }
+    }
+    impl Human {
+        fn fly(&self) {
+            println!("I'm a Human");
+        }
+    }
+    let person = Human;
+    Polit::fly(&person);
+    Wizard::fly(&person);
+    Human::fly(&person);
+    person.fly();
+
+    // 无参
+    trait Animal {
+        fn baby_name() -> String;
+    }
+    struct Dog;
+    impl Animal for Dog {
+        fn baby_name() -> String { String::from("animal") }
+    }
+    impl Dog {fn baby_name() -> String { String::from("dog") }}
+    println!("{}", Dog::baby_name());
+    // println!("{}", Animal::baby_name());
+    // 完全限定语法来指定我们希望调用的是Dog 的 Animal 实现
+    println!("{}", <Dog as Animal>::baby_name());
+}
+
+fn super_trait_test() {
+    use std::fmt;
+    trait OutlinePrint: fmt::Display {
+        fn outline_print(&self) {
+            let output = self.to_string();
+            let len = output.len();
+            println!("{}", "*".repeat(len + 4));
+            println!("*{}*", " ".repeat(len + 2));
+            println!("* {} *", output);
+            println!("*{}*", " ".repeat(len + 2));
+            println!("{}", "*".repeat(len + 4));
+        }
+    }
+    struct Point {
+        x: i32,
+        y: i32,
+    }
+    impl fmt::Display for Point {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "{}, {}", self.x, self.y)
+        } 
+    }
+    impl OutlinePrint for Point {}
+    let point = Point{x:1, y:2};
+    point.outline_print();
+    
+}
+
+fn overrideFmn() {
+    use std::fmt;
+    // impl fmt::Display for Vec<T> {}
+    struct Wrapper(Vec<String>);
+    impl fmt::Display for Wrapper {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "[{}]", self.0.join(", "))
+        }
+    }
+    let w = Wrapper(vec![String::from("hello"), String::from("world")]);
+    println!("w = {}", w);
+}
+
+//-------------------PART I---------------------
 
 fn unsafe_test() {
     println!("Hello, world!");
