@@ -12,7 +12,32 @@ fn main() {
     newtype_test();
 
     fn_pointer();
+
+    macro_rules_test();
 }
+//-------------------PART V---------------------
+
+fn macro_rules_test() {
+    #[macro_export]
+    macro_rules! myvec {
+        // 首先，一对括号包含了整个模式。接下来是美元符号（ $ ），后跟一对括号，捕获了符合括号内模式的值以用于替换后的代码。
+        // $() 内则是 $x:expr ，其匹配 Rust 的任意表达式，并将该表达式记作 $x。
+        // $() 之后的逗号说明一个可有可无的逗号分隔符可以出现在 $() 所匹配的代码之后。
+        // 紧随逗号之后的 * 说明该模式匹配零个或更多个 * 之前的任何模式。
+        ( $( $x:expr ),* ) => {
+            {
+                let mut temp_vec = Vec::new();
+                $(
+                    temp_vec.push($x);
+                )*
+                temp_vec
+            }
+        };
+    }
+    let a = myvec![1, 2, 3];
+}
+
+
 //-------------------PART IV--------------------
 fn fn_pointer() {
     fn add_one(x: i32) -> i32 {
