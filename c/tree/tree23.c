@@ -122,6 +122,10 @@ Node* insert(Node* root, Node* node, int key, char* value) {
 
 }
 
+Node* findChild(Node* node, int key, char* value) {
+
+}
+
 int main(void) {
     printf("----------start----------\n");
     Node* root = node_init(1, "root");

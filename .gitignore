@@ -3,10 +3,12 @@
 /**/resource
 /**/node_modules
 /**/temp
+/**/lib
 /**/test
 /**/.idea
 /**/.vscode
 /**/paddlepaddle
+
 
 HELP.md
 target/
