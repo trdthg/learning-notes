@@ -17,7 +17,7 @@ if __name__ == '__main__':
     capture = cv2.VideoCapture(0)
     capture.set(3,140)
     # model = hub.Module(name='unet_cityscapes')
-    face_detector = hub.Module(name="ultra_light_fast_generic_face_detector_1mb_320")
+    face_detector = hub.Module(name="ultra_light_fast_generic_face_detector_1mb_640")
 
     #循环显示帧
     i = 1

@@ -1,0 +1,13 @@
+name: rsw
+subcommands:
+    - new:
+        about: new project name
+        args:
+            - PROJECT:
+                help: project name
+                required: true
+                index: 1
+    - build:
+        about: build project
+    - clean:
+        about: delete the files in the target directory
