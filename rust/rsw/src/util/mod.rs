@@ -1,25 +1,45 @@
 extern crate regex;
 
-use std::path::Path;
-use std::process;
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
-use regex::Regex;
+use std::path::Path;
+use std::process;
+use std::time::SystemTime;
 
-static MD_STR: &str = r#"
----
+use self::regex::Regex;
+
+pub fn create_not_exists(dir: &str) {
+    if !Path::new(dir).exists() {
+        match fs::create_dir_all(dir) {
+            Err(why) => panic!("create {}: {}", dir, why.to_string()),
+            Ok(_) => println!("create {}", dir),
+        };
+    }
+}
+
+pub fn write_file(file_name: &str, content: &str) {
+    let index_md = Path::new(&file_name);
+    let mut file_index_md = match File::create(index_md) {
+        Err(why) => panic!("create {}: {}", file_name, why.to_string()),
+        Ok(file) => file,
+    };
+    match file_index_md.write_all(content.as_bytes()) {
+        Err(why) => panic!("write {}: {}", file_name, why.to_string()),
+        Ok(_) => println!("write {}", file_name),
+    };
+}
+
+static MD_STR: &str = r#"---
 title: {{ project }} 
 author: RustWriter
 template: index
 ---
 
 # {{ project }}
-This is written in rust writer. Simple, free and happy.
-"#;
+This is written in rust writer. Simple, free and happy."#;
 
-static HTML_STR: &str = r#"
-<!DOCTYPE html>
+static HTML_STR: &str = r#"<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -31,36 +51,13 @@ static HTML_STR: &str = r#"
 <body>
     {{ content }}
 </body>
-</html>
-"#;
-
-pub fn create_not_exists(dir: &str) {
-    if !Path::new(dir).exists() {
-        match fs::create_dir_all(dir) {
-            Ok(_) => println!("create {}", dir),
-            Err(err) => panic!("create {}: {}", dir, err)
-        }
-    }
-}
-
-pub fn write_file(file_name: &str, content: &str) {
-    let index_md = Path::new(&file_name);
-    let mut file_index_md = match File::create(index_md) {
-        Ok(file) => file,
-        Err(err) => panic!("create {}: {}", file_name, err),
-    };
-    match file_index_md.write_all(content.as_bytes()) {
-        Ok(_) => println!("write {}", file_name),
-        Err(err) => panic!("write {}: {}", file_name, err),
-    };
-
-}
+</html>"#;
 
 pub fn init_work_space(project_name: &str, public_dir: &str, src_dir: &str) {
-    // 新建文件夹
+    // 新建 root | src | public 目录 
     let path = Path::new(project_name);
     if path.exists() {
-        println!("{} has exists", project_name);
+        println!("{} exists", project_name);
         process::exit(0x0100);
     }
     let project_src = format!("{}/{}", project_name, src_dir);
@@ -68,17 +65,53 @@ pub fn init_work_space(project_name: &str, public_dir: &str, src_dir: &str) {
     create_not_exists(&project_src);
     create_not_exists(&project_public);
 
-    // 创建index.md
+    // 新建 index.md
     let index_md_name = format!("{}/{}", &project_src, "index.md");
+    // 这里的正则表达式是为了替换md模板中的{{project}}变量
     let re_project = Regex::new(r"\{\{\s*project\s*\}\}").unwrap();
     let md_text = String::from(re_project.replace_all(MD_STR, project_name));
     write_file(&index_md_name, &md_text);
-
-    // 创建__index.html
     let index_tpl_name = format!("{}/{}", &project_public, "__index.html");
+
     write_file(&index_tpl_name, HTML_STR);
 
-    // 创建rsw.toml
-    write_file(&format!("{}/{}", project_name, "rsw.toml"), &format!("site_name = \"{}\"\nsite_url = \"http://localhost\"", project_name));
+    write_file(&format!("{}/{}", project_name, "rsw.toml"), &format!("site_name = \"{}\"\nsite_url=\"http://localhost\"", project_name));
     println!("{} created successfully", project_name);
-} 
+}
+
+pub fn convert_path(path_str: &str) -> String {
+    if cfg!(target_os = "windows") {
+        String::from(path_str.replace("\\", "/"))
+    } else {
+        String::from(path_str)
+    }
+}
+
+pub fn mtime(path_str: &str) -> std::result::Result<u64, std::io::Error> {
+    let file = File::open(path_str)?;
+    let metadata = file.metadata()?;
+    let mtime = metadata.modified()?;
+    let secs = match mtime.duration_since(SystemTime::UNIX_EPOCH) {
+        Ok(duration) => duration.as_secs(),
+        Err(_) => 0,
+    };
+    Ok(secs)
+}
+
+pub fn skip(src_file: &str, target_file: &str) -> bool {
+    // 源文件最后修改时间
+    let src_mtime = mtime(src_file).unwrap_or(0);
+    // 目标文件最后修改时间
+    let target_mtime = mtime(target_file).unwrap_or(0);
+    // 如果目标文件 > 源文件，表示不需要重新build
+    if target_mtime >= src_mtime {
+        true
+    } else {
+        false
+    }
+}
+pub fn md_to_html_ext(file_name: &str) -> String {
+    let names: Vec<&str> = file_name.rsplitn(2, '.').collect();
+    format!("{}{}", names[1], ".html")
+}
+

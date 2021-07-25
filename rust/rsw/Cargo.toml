@@ -1,15 +1,22 @@
 [package]
 name = "rsw"
-version = "0.1.0"
-authors = ["trdthg@outlook.com"]
+version = "0.2.0"
+authors = ["dev-tang <dev-tang@foxmail.com>"]
 edition = "2018"
 
 [[bin]]
 name = "rsw"
 path = "src/main.rs"
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-chrono = "0.4.19"
-clap = {version = "2.33.3", features = ["yaml"]}
-regex = "1.5.4"
+regex = "0.2"
+comrak = "0.6.2"
+clap = {version="2.29.0", features=["yaml"]}
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.8"
+serde_derive = "1.0.104"
+toml = "0.5"
+chrono = "0.4.10"
+
+[profile.release]
+lto = true

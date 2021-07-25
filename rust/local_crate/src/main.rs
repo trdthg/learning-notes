@@ -1,6 +1,8 @@
 fn main() {
-    // create_dir_test();    
+    create_dir_test();    
     regex_test();
+    read_dir_test();
+    comrak_test();
 }
 
 fn create_dir_test() {
@@ -32,4 +34,66 @@ fn regex_test() {
     "#;
     let replaced_text = re_mod.replace_all(text, "kk");
     println!("{}", replaced_text);
+}
+
+fn read_dir_test() {
+    use std::path::Path;
+    use std::fs;
+    use std::process;
+    
+    let src: &str = "release";
+    let dir = Path::new(src);
+    let entrys = match fs::read_dir(dir) {
+        Ok(entrys) => entrys,
+        Err(err) => { 
+            println!("- {}: {}", err.to_string(), src);
+            process::exit(1);
+        }
+    };
+    for entry in entrys {
+        if let Ok(entry) = entry {
+            let child = entry.path();
+            let file_name = child.to_str().unwrap();
+            println!("- {}", file_name);
+            let dirs: Vec<&str> = file_name.rsplitn(2, "\\").collect();
+            for dir in dirs.iter() {
+                println!("    - {}", dir);
+            }
+            println!("- {}", file_name);
+            let dirs: Vec<&str> = file_name.splitn(2, "\\").collect();
+            for dir in dirs.iter() {
+                println!("    - {}", dir);
+            }
+        }
+        
+    }
+    // struct Wrapper<T = String>(Vec<T>);
+    // use std::ops::Deref;
+    // impl<T> Deref for Wrapper<Vec<T>> {
+    //     type Target = Vec<T>;
+    //     fn deref(&self) -> &Vec<T> {
+    //         &self
+    //     }
+    // }
+    // use std::fmt;
+    // impl<T> fmt::Display for Wrapper<Vec<T>> {
+    //     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    //         write!(f, "[{}]", self.0.join(", "))
+    //     }
+    // }
+}
+
+fn comrak_test() {
+    use comrak::{ComrakOptions, markdown_to_html};
+    let md_str = r#"
+# sadwd##ssss##
+# [kkk](sss)
+# ![kkk](sss), sssss
+```python
+print("Hello World!")
+```
+"#;
+    let html = markdown_to_html(md_str, &ComrakOptions::default());
+    println!("{}", html);
+
 }
