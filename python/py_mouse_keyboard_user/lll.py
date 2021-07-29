@@ -89,6 +89,7 @@ def find_song(word):
                 i = i + 1
             # select = int(input("请输入您的选择:")) - 1
             select = 1
+            print(songmid)
             return songmid[select], song_singer[select]
         except Exception as e:
             print(f'歌曲查找有误：{e}')
@@ -98,7 +99,7 @@ def find_song(word):
 if __name__ == '__main__':
     # while True:
         songname = input("Please input the music name:")
-        songname = '叹云兮'
+        songname = '美了美了'
 
         # songname = "一剪梅"
         song_mid, singer = find_song(songname)
@@ -120,3 +121,4 @@ if __name__ == '__main__':
         # con = input('Download success or not continue: y/n')
         # if con == 'n':
         #     break
+

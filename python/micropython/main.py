@@ -3,7 +3,10 @@ import webrepl
 import time 
 from time import sleep  
 import urequests
-SSIDs = [("602", "4602yyds")]  
+
+# 某几个默认wifi
+SSIDs = [("602", "4602yyds"), ("", "")]  
+
 def do_connect():     
     import network     
     wlan = network.WLAN(network.STA_IF)     
@@ -19,8 +22,11 @@ def do_connect():
     if wlan.isconnected():         
         print("successfully connected")         
         print('network config:', wlan.ifconfig())  
-def main():     
+
+def get_weather():
+    res = urequests.get("www.baidu.com")
+    print(res)
+
+if __name__ == "__main__":
     do_connect()  
-    get_weather
-    
-main()
+    get_weather()
