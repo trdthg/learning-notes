@@ -3,6 +3,7 @@ fn main() {
     regex_test();
     read_dir_test();
     comrak_test();
+    mut_test();
 }
 
 fn create_dir_test() {
@@ -86,14 +87,32 @@ fn read_dir_test() {
 fn comrak_test() {
     use comrak::{ComrakOptions, markdown_to_html};
     let md_str = r#"
-# sadwd##ssss##
-# [kkk](sss)
-# ![kkk](sss), sssss
-```python
-print("Hello World!")
-```
-"#;
+    # sadwd##ssss##
+    # [kkk](sss)
+    # ![kkk](sss), sssss
+    ```python
+    print("Hello World!")
+    ```
+    "#;
     let html = markdown_to_html(md_str, &ComrakOptions::default());
     println!("{}", html);
 
+}
+
+fn mut_test() {
+    
+    struct A {
+        val: i32,
+        next: B,
+    }
+    struct B {
+        val: i32,
+        next: C,
+    }
+    struct C {
+        val: i32,
+    }
+    let c = C { val: 3 };
+    let mut a = A { val: 1, next: B { val: 2, next: c}};
+    a.next.next.val = 1;
 }
