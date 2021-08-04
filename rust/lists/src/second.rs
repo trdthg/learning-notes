@@ -1,5 +1,4 @@
-use std::mem;
-
+// 
 /**
  * title: An Ok Singly-Linked Stack
  * 
@@ -275,13 +274,10 @@ impl<T> List<T> {
 impl<'a, T> Iterator for IterMut<'a, T> {
     type Item = &'a mut T;
     fn next(&mut self) -> Option<&'a mut T> {
-        // 这里需要说明
-        /**
-         * 不同于Iter的实现使用self.next, 这里使用了self.next.take(),
-         * iter是不可变引用, 获取所有权实际上是clone一份&
-         * iter_mut是mut, 需要take()掉所有权
-         * 所以iter中的self.next == self.next.clone()
-         */
+        // 不同于Iter的实现使用self.next, 这里使用了self.next.take(),
+        // iter是不可变引用, 获取所有权实际上是clone一份&
+        // iter_mut是mut, 需要take()掉所有权
+        // 所以iter中的self.next == self.next.clone()
         self.next.take().map(|node| {
             self.next = node.next.as_mut().map(|node|  &mut **node);
             // self.next = node.next.as_deref_mut();
