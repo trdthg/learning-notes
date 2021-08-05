@@ -109,6 +109,7 @@ impl<T> List<T> {
         })
     }
 }
+
 impl<T> Node<T> {
     pub fn new(elem: T) -> Rc<RefCell<Node<T>>> {
         Rc::new(RefCell::new(Node {
