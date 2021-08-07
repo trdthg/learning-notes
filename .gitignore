@@ -1,10 +1,10 @@
 /**/target
-/**/*.min.js
 /**/out
 /**/resource
 /**/node_modules
 /**/temp
 /**/lib
+/**/**/lib
 /**/test
 /**/.idea
 /**/.vscode

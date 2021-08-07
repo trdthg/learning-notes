@@ -1,22 +1,24 @@
 [package]
-name = "rsw"
-version = "0.2.0"
-authors = ["dev-tang <dev-tang@foxmail.com>"]
+name = "rsbook"
+version = "0.1.0"
+authors = ["trdthg <trdthg@outlook.com>"]
 edition = "2018"
 
 [[bin]]
-name = "rsw"
+name = "rsbook"
 path = "src/main.rs"
 
 [dependencies]
-regex = "0.2"
-comrak = "0.6.2"
+regex = "1.5.4"
+comrak = "0.11.0"
 clap = {version="2.29.0", features=["yaml"]}
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.8"
 serde_derive = "1.0.104"
 toml = "0.5"
 chrono = "0.4.10"
+
+json = "0.12.4"
 
 [profile.release]
 lto = true
