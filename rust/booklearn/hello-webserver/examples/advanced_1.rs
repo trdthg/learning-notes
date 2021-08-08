@@ -19,7 +19,7 @@ fn main() -> Result<()> {
     let (sender, receiver) = mpsc::channel();
     
     let sender_stream = sender.clone();
-    thread::spawn(move || {
+    let accept_loop = thread::spawn(move || {
         while let Ok((stream, addr)) = tcplistener.accept() {
             sender_stream.send(Message::Connected(stream));
         }
@@ -41,6 +41,7 @@ fn main() -> Result<()> {
         }
     }
 
+    // accept_loop.join();
     Ok(())
 }
 
