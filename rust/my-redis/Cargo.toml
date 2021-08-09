@@ -8,3 +8,6 @@ edition = "2018"
 [dependencies]
 tokio = { version = "", feature = "full" }
 mini-redis = ""
+
+# bytes类型相当于 Arc<Vec<u8>>
+bytes = ""
