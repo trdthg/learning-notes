@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+
+
+    <link rel="stylesheet" type="text/css" href="./assets/css/github.min.css"/>
+    <link rel="stylesheet" type="text/css" href="./assets/css/index.css"/>
+    <script src="./assets/js/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <script type="text/javascript">
+      function a(obj) {
+        obj = obj.nextElementSibling
+        for (let childnode of obj.childNodes) {
+          if (childnode.hidden != true) {
+            childnode.hidden = true
+          } else {
+            childnode.hidden = false
+          }
+        }
+      }
+    </script>
+</head>
+<body>
+    <div id = "app">
+        <div class = "container">
+            <div class = "nav">
+              <div id="">
+                <div class="title"> 
+                  <a href="index.html"><span>{{ title }}</span></a>
+                </div>
+                <div class = "links"> {{ links }}
+                    <span><a href="./">Trdthg</a></span>
+                    <span><a href="./">Trdthg</a></span>
+                    <span><a href="./">Trdthg</a></span>
+                    <span><a href="./">Trdthg</a></span>
+                    <span><a href="./">Trdthg</a></span>
+                </div>
+              </div>
+            </div>
+            <div class = "sidebar"> {{ sidebar_content }}
+              
+              <div id=dropdown>
+                <div class="desc"  onclick="a(this)">
+                  动画
+                </div>
+                <div class="more">
+                  <div class="item">A</div>
+                  <div class="item">B</div>
+                  <div class="desc"  onclick="a(this)">
+                    动画
+                  </div>
+                  <div class="more">
+                    <div class="item">A</div>
+                    <div class="item">B</div>
+                    <div class="item">C</div>
+                  </div>
+                </div>
+              </div>
+              
+            </div>
+            <div class = "page">
+              <div class = "content">{{ page_content }}
+              </div>
+            </div>
+            
+        </div>
+    </div>
+    
+</body>
+</html>

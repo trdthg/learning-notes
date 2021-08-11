@@ -1,0 +1,29 @@
+{
+    "head": { 
+        "title": "Trdthg's blog",
+        "icon": "logo.png"
+    },
+    "markdown": {
+          "lineNumbers": false 
+    },
+    "themeConfig": {
+        "lastUpdated": "Last Updated",
+        "sidebarDepth": 3,
+        "sidebar": [
+            {"link": "/java/", "pages": ["java", "sourceread", "spring", "springboot", "stuffs"]},
+            {"link": "/js/", "pages": ["js", "vue"]},
+            {"link": "/python/", "pages": ["python"]},
+            {"link": "/rust/", "pages": ["rust", "lists", "wasm"]},
+            {"link": "/other/", "pages": ["other", "script", "datastructure"]},
+            {"link": "/", "pages": [""]}
+        ]
+    },
+    "nav": [
+        {"text": "Java",  "link": "/java/java"},
+        {"text": "前端", "link": "/js/js" },
+        {"text": "Python", "link": "/python/python"},
+        {"text": "Rust", "link": "/rust/rust" },
+        {"text": "其他", "link": "/other/other"},
+        {"text": "Github", "link": "https://github.com/trdthg"}
+    ]
+}

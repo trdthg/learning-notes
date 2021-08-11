@@ -45,3 +45,4 @@ build/
 ### VS Code ###
 .vscode/
 
+rust/rsbook/assets/js/highlight.min.js

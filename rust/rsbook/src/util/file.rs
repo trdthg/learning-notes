@@ -1,9 +1,7 @@
-
 use std::fs;
-use std::path::Path;
 use std::fs::File;
 use std::io::prelude::*;
-
+use std::path::Path;
 
 pub fn create_dirs(dir: &str) {
     if !Path::new(dir).exists() {
@@ -29,4 +27,11 @@ pub fn create_file(path: &str) {
 pub fn write_file(path: &str, content: &str) {
     let mut f = File::create(path).unwrap();
     f.write_all(content.as_bytes());
+}
+
+#[cfg(test)]
+pub mod test {
+
+    #[test]
+    fn demo() {}
 }

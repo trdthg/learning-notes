@@ -10,17 +10,18 @@ subcommands:
                 help: project name
                 required: true
                 index: 1
-            - base_dir:
-                short: b
-                long: base
-                value_name: base_url
-                help: Set the base url for your project
-                takes_value: true
+            # - base_dir:
+            #     short: b
+            #     long: base
+            #     value_name: base_url
+            #     help: Set the base url for your project
+            #     takes_value: true
     - build:
-          about: build project
-#          args:
-#              - force
-#                    short: f
-#                    help: Force everything to compile, whether or not it has changed
+        about: build project
+        args:
+            - PROJECT_NAME:
+                help: project name
+                required: true
+                index: 1
     - clean:
         about: delete the files in the build directory
