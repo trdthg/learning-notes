@@ -51,7 +51,8 @@ pub fn create_all(docs: &str, dist: &str, config: &Config) {
         let folder_name = k;
         create_dirs(&format!("{}/{}",dist, folder_name));
         for file_name in v {
-            let content = fs::read_to_string("assets/index.html").unwrap();
+            let content = fs::read_to_string("assets/other.html").unwrap();
+            let md = &format!("{}/{}/{}.md", docs, folder_name, file_name);
             // title
             let re_module = Regex::new(r"\{\{\s*title\s*\}\}").unwrap();
             let content = &String::from(re_module.replace_all(&content, &config.title));
@@ -65,15 +66,15 @@ pub fn create_all(docs: &str, dist: &str, config: &Config) {
             let links = get_links(&config.nav_map);
             let content = &String::from(re_module.replace_all(content, links));
 
-            // sidebar_content
-            let re_module = Regex::new(r"\{\{\s*sidebar_content\s*\}\}").unwrap();
-            let sidebar_content = get_titles(&format!("{}/{}/{}.md", docs, folder_name, file_name));
-            let content = &String::from(re_module.replace_all(content, sidebar_content));
 
-            // page_content
-            let re_module = Regex::new(r"\{\{\s*page_content\s*\}\}").unwrap();
-            let md_content = fs::read_to_string(&format!("{}/{}/{}.md", docs, folder_name, file_name)).unwrap();
+            // page_content && sidebar_content
+            let md_content = fs::read_to_string(md).unwrap();
             let md_html = markdown_to_html(&md_content, &ComrakOptions::default());
+            let (md_html, sidebar_content) = get_titles_from_html(&md_html);
+
+            let re_module = Regex::new(r"\{\{\s*sidebar_content\s*\}\}").unwrap();
+            let content = &String::from(re_module.replace_all(content, sidebar_content));
+            let re_module = Regex::new(r"\{\{\s*page_content\s*\}\}").unwrap();
             let content = &String::from(re_module.replace_all(content, md_html));
 
             // create new index file

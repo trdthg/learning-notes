@@ -119,8 +119,117 @@ pub fn get_titles(path: &str) -> String {
     buf
 }
 
+pub fn get_titles_from_html(html: &str) -> (String, String) {
+    let lines: Vec<&str> = html.split("\n").collect();
+    let mut new_lines = String::new();
+
+    let mut is_incode = -1;
+    let mut text: String;
+    let mut text_len: u8;
+    let mut texts: Vec<String> = Vec::new();
+    let mut lens: Vec<u8> = Vec::new();
+    let mut random_ids = Vec::new();
+
+    // 获取加入id后的html, 以及id列表
+    for line in lines {
+        let random_id: String = nanoid!(4);
+        // 判断是否位于代码块内部
+        if line.starts_with("```") {
+            is_incode *= -1;
+            continue;
+        }
+        if is_incode == 1 {
+            continue;
+        }
+        if line.starts_with("<h") {
+            // 获得标题
+            let new_line = "";
+            if line.starts_with("<h1") {
+                text = line.replace("<h1>", "").replace("</h1>", "");
+                let new_line = &line.replace("<h1>", &format!(r#"<h1 id="{}">"#, random_id));
+                new_lines.push_str(new_line);
+                text_len = 1;
+            } else if line.starts_with("<h2") {
+                text = line.replace("<h2>", "").replace("</h2>", "");
+                let new_line = &line.replace("<h2>", &format!(r#"<h2 id="{}">"#, random_id));
+                new_lines.push_str(new_line);
+                text_len = 2;
+            } else if line.starts_with("<h3") {
+                text = line.replace("<h3>", "").replace("</h3>", "");
+                let new_line = &line.replace("<h3>", &format!(r#"<h3 id="{}">"#, random_id));
+                new_lines.push_str(new_line);
+                text_len = 3;
+            } else if line.starts_with("<h4>") {
+                text = line.replace("<h4>", "").replace("</h4>", "");
+                let new_line = &line.replace("<h4>", &format!(r#"<h4 id="{}">"#, random_id));
+                new_lines.push_str(new_line);
+                text_len = 4;
+            } else if line.starts_with("##### ") {
+                text = line.replace("<h5>", "").replace("</h5>", "");
+                let new_line = &line.replace("<h5>", &format!(r#"<h5 id="{}">"#, random_id));
+                new_lines.push_str(new_line);
+                text_len = 5;
+            } else {
+                text = line.replace("<h6>", "").replace("</h6>", "");
+                let new_line = &line.replace("<h6>", &format!(r#"<h6 id="{}">"#, random_id));
+                new_lines.push_str(new_line);
+                text_len = 6;
+            }
+            texts.push(text);
+            lens.push(text_len);
+            random_ids.push(random_id);
+        } else {
+            new_lines.push_str(line);
+        }
+    }
+
+    let mut buf = String::new();
+    println!("{:?}", lens);
+    let mut fa_len: u8 = 0;
+    let mut index = 0;
+    let mut more_count = 0;
+
+    lens.push(0);
+    for len in lens {
+        if fa_len == 0 {
+            fa_len = len;
+            continue;
+        };
+        if len > fa_len {
+            more_count += 1;
+            buf.push_str(&format!(
+                r##"<div class="desc h{}" onclick="return a(this)"><a href="#{}"><span>{}</span></a></div><div class="more">"##,
+                fa_len, random_ids[index], texts[index]
+            ));
+        } else if fa_len == len {
+            buf.push_str(&format!(
+                r##"<div class="item h{}" ><a href="#{}"><span>{}</span></a></div>"##,
+                fa_len, random_ids[index], texts[index]
+            ));
+        } else {
+            buf.push_str(&format!(
+                r##"<div class="item h{}"><a href="#{}"><span>{}</span></a></div>"##,
+                fa_len, random_ids[index], texts[index]
+            ));
+            if len == 0 {
+                break;
+            }
+            more_count -= fa_len - len;
+            for _i in [..(fa_len - len)] {
+                buf.push_str("</div>");
+            }
+        }
+        index += 1;
+        fa_len = len;
+    }
+
+    for _i in [..more_count] {
+        buf.push_str("</div>");
+    }
+    (new_lines, buf)
+}
+
 pub fn get_links(nav: &HashMap<String, String>) -> String {
-    // <span><a href="./">Trdthg</a></span>
     let mut res = String::new();
     for (k, v) in nav {
         res.push_str(&format!("<span class = \"nav_lists\"><a href=\"../{}.html\">{}</a></span>", v, k));
@@ -129,7 +238,6 @@ pub fn get_links(nav: &HashMap<String, String>) -> String {
 }
 
 pub fn get_links_index(nav: &HashMap<String, String>) -> String {
-    // <span><a href="./">Trdthg</a></span>
     let mut res = String::new();
     for (k, v) in nav {
         res.push_str(&format!(r#"<span class = "nav_lists"><a href="{}.html">{}</a></span>"#, v, k));

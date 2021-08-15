@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trdthg's blog</title>
+
+    <link rel="stylesheet" type="text/css" href="../assets/css/prism.css"/>
+    <link rel="stylesheet" type="text/css" href="../assets/css/index.css"/>
+
+    <script type="text/javascript">
+      function a(obj) {
+        obj = obj.nextElementSibling
+        for (let childnode of obj.childNodes) {
+          if (childnode.hidden != true) {
+            childnode.hidden = true
+          } else {
+            childnode.hidden = false
+          }
+        }
+        return false
+      }
+    </script>
+</head>
+<body>
+  <div id = "app">
+    <div class = "container">
+        
+      <div class = "nav">
+        <div id="">
+          <div class="title"><a href="../index.html"><span>Trdthg's blog</span></a></div>
+          <div class = "links"> <span class = "nav_lists"><a href="../rust/rust.html">Rust</a></span><span class = "nav_lists"><a href="../other/other.html">其他</a></span><span class = "nav_lists"><a href="../java/java.html">Java</a></span><span class = "nav_lists"><a href="../python/python.html">Python</a></span><span class = "nav_lists"><a href="../https://github.com/trdthg.html">Github</a></span><span class = "nav_lists"><a href="../js/js.html">前端</a></span> </div>
+        </div>
+      </div>
+
+      <div class = "sidebar"> <div class="desc h1" onclick="return a(this)"><a href="#_Lkg"><span>WebAssembly初体验</span></a></div><div class="more"><div class="desc h2" onclick="return a(this)"><a href="#_JNs"><span>hello-wasm</span></a></div><div class="more"><div class="item h3" ><a href="#Ne0I"><span>安装准备</span></a></div><div class="desc h3" onclick="return a(this)"><a href="#MmkQ"><span>构建 WebAssembly npm 包</span></a></div><div class="more"><div class="item h4" ><a href="#Jstd"><span>新建项目</span></a></div><div class="item h4" ><a href="#9xRN"><span>lib.rs</span></a></div><div class="item h4" ><a href="#vY9u"><span>Cargo.toml</span></a></div><div class="item h4"><a href="#_vbc"><span>构建发布</span></a></div></div><div class="desc h3" onclick="return a(this)"><a href="#SKRf"><span>在webpack项目使用</span></a></div><div class="more"><div class="item h4" ><a href="#o2M-"><span>目录</span></a></div><div class="item h4" ><a href="#khgB"><span>package.json</span></a></div><div class="item h4" ><a href="#Tni8"><span>webpack.config.js</span></a></div><div class="item h4" ><a href="#cZxc"><span>index.html</span></a></div><div class="item h4" ><a href="#hfI0"><span>index.js</span></a></div><div class="item h4"><a href="#hY31"><span>启动</span></a></div></div><div class="item h2"><a href="#ollT"><span>待续...</span></a></div></div></div></div></div>
+
+      <div class = "page">
+        <div class = "content"><h1 id="_Lkg">WebAssembly初体验</h1><h2 id="_JNs">hello-wasm</h2><p><a href="https://developer.mozilla.org/zh-CN/docs/WebAssembly/Rust_to_wasm">MDN教程</a></p><h3 id="Ne0I">安装准备</h3><ul><li>安装Rust</li><li>安装wasm-pack</li></ul><pre><code>cargo install wasm-pack</code></pre><ul><li>安装node.js并注册账户</li></ul><pre><code class="language-powershell">&gt; npm adduserUsername: :Email: (this IS public) @example.com</code></pre><h3 id="MmkQ">构建 WebAssembly npm 包</h3><h4 id="Jstd">新建项目</h4><pre><code>cargo new --lib hello-wasm+-- Cargo.toml+-- src    +-- lib.rs</code></pre><h4 id="9xRN">lib.rs</h4><pre><code class="language-rust">extern crate wasm_bindgen;use wasm_bindgen::prelude::*;#[wasm_bindgen]extern {    pub fn alert(s: &amp;str);}#[wasm_bindgen]pub fn greet(name: &amp;str) {    alert(&amp;format!(&quot;Hello, {}!&quot;, name));}</code></pre><h4 id="vY9u">Cargo.toml</h4><pre><code class="language-toml">[package]name = &quot;hello-wasm&quot;version = &quot;0.1.0&quot;authors = [&quot;Your Name &lt;you@example.com&gt;&quot;]description = &quot;A sample project with wasm-pack&quot;license = &quot;MIT/Apache-2.0&quot;repository = &quot;https://github.com/yourgithubusername/hello-wasm&quot;[lib]crate-type = [&quot;cdylib&quot;][dependencies]wasm-bindgen = &quot;0.2&quot;</code></pre><h4 id="_vbc">构建发布</h4><pre><code class="language-shell"># 构建wasm-pack build --scope # 发布cd pkgnpm publish --access=public</code></pre><h3 id="SKRf">在webpack项目使用</h3><h4 id="o2M-">目录</h4><pre><code>+-- site    +-- package.json    +-- webpack.config.js    +-- index.html</code></pre><h4 id="khgB">package.json</h4><pre><code class="language-json">{  &quot;scripts&quot;: {    &quot;serve&quot;: &quot;webpack-dev-server&quot;  },  &quot;dependencies&quot;: {    &quot;@mynpmusername/hello-wasm&quot;: &quot;^0.1.0&quot;  },  &quot;devDependencies&quot;: {    &quot;webpack&quot;: &quot;^4.25.1&quot;,    &quot;webpack-cli&quot;: &quot;^3.1.2&quot;,    &quot;webpack-dev-server&quot;: &quot;^3.1.10&quot;  }}</code></pre><h4 id="Tni8">webpack.config.js</h4><pre><code class="language-js">const path = require('path');module.exports = {  entry: &quot;./index.js&quot;,  output: {    path: path.resolve(__dirname, &quot;dist&quot;),    filename: &quot;index.js&quot;,  },  mode: &quot;development&quot;};</code></pre><h4 id="cZxc">index.html</h4><pre><code class="language-html">&lt;!DOCTYPE html&gt;&lt;html&gt;  &lt;head&gt;    &lt;meta charset=&quot;utf-8&quot;&gt;    &lt;title&gt;hello-wasm example&lt;/title&gt;  &lt;/head&gt;  &lt;body&gt;    &lt;script src=&quot;./index.js&quot;&gt;&lt;/script&gt;  &lt;/body&gt;&lt;/html&gt;</code></pre><h4 id="hfI0">index.js</h4><pre><code class="language-js">const js = import(&quot;./node_modules/@yournpmusername/hello-wasm/hello_wasm.js&quot;);js.then(js =&gt; {  js.greet(&quot;WebAssembly&quot;);});</code></pre><h4 id="hY31">启动</h4><pre><code class="language-shell">$ npm install$ npm run serve</code></pre><h2 id="ollT">待续...</h2></div>
+      </div>
+      
+    </div>
+  </div>
+  <script src="../assets/js/prism.js"></script>
+</body>
+</html>

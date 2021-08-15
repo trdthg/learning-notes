@@ -4,10 +4,9 @@ body {
   background-image: url(https://www.10wallpaper.com/wallpaper/1920x1200/1909/2019_Red_Blue_Abstract_Design_Desktop_1920x1200.jpg);  
   background-repeat: no-repeat;
   background-attachment:fixed;
+  overflow-y: auto;
 }
-.container {
-  height: 100%;
-}
+
 
 .nav {
   background-color: white;
@@ -34,7 +33,6 @@ body {
 }
 
 
-
 .sidebar {
   background-color: #fff;
   width: 12rem;
@@ -50,26 +48,54 @@ body {
 } 
 .sidebar .item, .sidebar .desc {
   font-size: small;
-  padding: 3px;
   padding-top: 5px;
+} .sidebar a {
+  text-decoration: none;
 }
   
 .page {
   opacity: 0.8;
   width: 56rem;
-  padding-top: 5rem;
+  margin-top: 5rem;
   padding-left: 18rem;
-  /* position:absolute; */
+  position:absolute;
   /* top: 5em;
   bottom: 0; */
 } .page .content {
   border-radius: 10px;
   background-color: white;
-  margin: 0 auto;
   padding: 2.5em;
+  overflow-y: auto;
 }
 
 
 pre {
     border-radius: 10px;
+}
+
+h1 {
+  padding-top:3em;margin-top:-3em;
+} h2 {
+  padding-top:3em;margin-top:-3em;
+}h3 {
+  padding-top:3em;margin-top:-3em;
+}h4 {
+  padding-top:3em;margin-top:-3em;
+}h5 {
+  padding-top:3em;margin-top:-3em;
+}h6 {
+  padding-top:3em;margin-top:-3em;
+}
+
+
+.h2 {
+  padding-left: 1.5em;
+}.h3 {
+  padding-left: 3em;
+}.h4 {
+  padding-left: 4.5em;
+}.h5 {
+  padding-left: 6px;
+}.h6 {
+  padding-left: 7.5px;
 }

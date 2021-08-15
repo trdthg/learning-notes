@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trdthg's blog</title>
+
+    <link rel="stylesheet" type="text/css" href="../assets/css/prism.css"/>
+    <link rel="stylesheet" type="text/css" href="../assets/css/index.css"/>
+
+    <script type="text/javascript">
+      function a(obj) {
+        obj = obj.nextElementSibling
+        for (let childnode of obj.childNodes) {
+          if (childnode.hidden != true) {
+            childnode.hidden = true
+          } else {
+            childnode.hidden = false
+          }
+        }
+        return false
+      }
+    </script>
+</head>
+<body>
+  <div id = "app">
+    <div class = "container">
+        
+      <div class = "nav">
+        <div id="">
+          <div class="title"><a href="../index.html"><span>Trdthg's blog</span></a></div>
+          <div class = "links"> <span class = "nav_lists"><a href="../rust/rust.html">Rust</a></span><span class = "nav_lists"><a href="../other/other.html">其他</a></span><span class = "nav_lists"><a href="../java/java.html">Java</a></span><span class = "nav_lists"><a href="../python/python.html">Python</a></span><span class = "nav_lists"><a href="../https://github.com/trdthg.html">Github</a></span><span class = "nav_lists"><a href="../js/js.html">前端</a></span> </div>
+        </div>
+      </div>
+
+      <div class = "sidebar"> <div class="desc h1" onclick="return a(this)"><a href="#dhV7"><span>Rust</span></a></div><div class="more"><div class="desc h2" onclick="return a(this)"><a href="#kUEz"><span>Path</span></a></div><div class="more"><div class="item h3"><a href="#lmtg"><span>stdlib</span></a></div></div><div class="desc h2" onclick="return a(this)"><a href="#0G_a"><span>lifetime</span></a></div><div class="more"><div class="item h3"><a href="#e0Y6"><span>自动处理</span></a></div></div><div class="desc h2" onclick="return a(this)"><a href="#I8Qh"><span>Rc &amp; Arc</span></a></div><div class="more"><div class="item h3" ><a href="#HAp7"><span>Introduce</span></a></div><div class="item h3" ><a href="#pZiP"><span>try_unwrap()</span></a></div><div class="item h3"><a href="#BoX4"><span>From Std Lib</span></a></div></div><div class="desc h2" onclick="return a(this)"><a href="#zfYW"><span>Cell &amp; RefCell</span></a></div><div class="more"><div class="item h3"><a href="#2_AM"><span>From Std Lib</span></a></div></div><div class="desc h2" onclick="return a(this)"><a href="#HDYA"><span>Ref &amp; RefMut</span></a></div><div class="more"><div class="item h3" ><a href="#mTmv"><span>Ref::map()</span></a></div><div class="item h3"><a href="#AHmp"><span>RefMut::map()</span></a></div></div><div class="item h2"><a href="#HDez"><span></span></a></div></div></div></div></div>
+
+      <div class = "page">
+        <div class = "content"><h1 id="dhV7">Rust</h1><h2 id="kUEz">Path</h2><h3 id="lmtg">stdlib</h3><pre><code class="language-rust">// 从 `&amp;'static str` 创建一个 `Path`let path = Path::new(&quot;.&quot;);// `display` 方法返回一个可显示（showable）的结构体let display = path.display();// `join` 使用操作系统特定的分隔符来合并路径到一个字节容器，并返回新的路径let new_path = path.join(&quot;a&quot;).join(&quot;b&quot;);// 将路径转换成一个字符串切片match new_path.to_str() {    None =&gt; panic!(&quot;new path is not a valid UTF-8 sequence&quot;),    Some(s) =&gt; println!(&quot;new path is {}&quot;, s),}</code></pre><h2 id="0G_a">lifetime</h2><h3 id="e0Y6">自动处理</h3><pre><code class="language-rust">// Only one reference in input, so the output must be derived from that inputfn foo(&amp;A) -&gt; &amp;B; // sugar for:fn foo&lt;'a&gt;(&amp;'a A) -&gt; &amp;'a B;// Many inputs, assume they're all independentfn foo(&amp;A, &amp;B, &amp;C); // sugar for:fn foo&lt;'a, 'b, 'c&gt;(&amp;'a A, &amp;'b B, &amp;'c C);// Methods, assume all output lifetimes are derived from `self`fn foo(&amp;self, &amp;B, &amp;C) -&gt; &amp;D; // sugar for:fn foo&lt;'a, 'b, 'c&gt;(&amp;'a self, &amp;'b B, &amp;'c C) -&gt; &amp;'a D;</code></pre><h2 id="I8Qh">Rc &amp; Arc</h2><h3 id="HAp7">Introduce</h3><p>The key to our design is the RefCell type. The heart of RefCell is a pair of methods:</p><pre><code class="language-rust">fn borrow(&amp;self) -&gt; Ref&lt;'_, T&gt;;fn borrow_mut(&amp;self) -&gt; RefMut&lt;'_, T&gt;;</code></pre><h3 id="pZiP">try_unwrap()</h3><p>Get T from Rc&lt;T&gt;try to use <code>try_unwrap()</code>, which moves out the contents of an Rc if its refcount is 1.::: warningunwrap on Result requires that you can debug-print the error case. RefCell<!-- raw HTML omitted --> only implements Debug if T does. Node doesn't implement Debug.try: Rc::try_unwrap(old_head).ok().unwrap().into_inner().elem:::</p><h3 id="BoX4">From Std Lib</h3><blockquote><p>Introducing inherited mutability roots to shared typesShared smart pointer types, including Rc<!-- raw HTML omitted --> and Arc<!-- raw HTML omitted -->, provide containers that can be cloned and shared between multiple parties. Because the contained values may be multiply-aliased, they can only be borrowed as shared references, not mutable references. Without cells it would be impossible to mutate data inside of shared boxes at all!</p></blockquote><blockquote><p>It's very common then to put a RefCell<!-- raw HTML omitted --> inside shared pointer types to reintroduce mutability:</p></blockquote><pre><code class="language-rust">use std::collections::HashMap;use std::cell::RefCell;use std::rc::Rc;fn main() {    let shared_map: Rc&lt;RefCell&lt;_&gt;&gt; = Rc::new(RefCell::new(HashMap::new()));    shared_map.borrow_mut().insert(&quot;africa&quot;, 92388);    shared_map.borrow_mut().insert(&quot;kyoto&quot;, 11837);    shared_map.borrow_mut().insert(&quot;piccadilly&quot;, 11826);    shared_map.borrow_mut().insert(&quot;marbles&quot;, 38);}</code></pre><blockquote><p>Note that this example uses Rc<!-- raw HTML omitted --> and not Arc<!-- raw HTML omitted -->. RefCell<!-- raw HTML omitted -->s are for single-threaded scenarios. Consider using Mutex<!-- raw HTML omitted --> if you need shared mutability in a multi-threaded situation.</p></blockquote><h2 id="zfYW">Cell &amp; RefCell</h2><h3 id="2_AM">From Std Lib</h3><blockquote><p>Shareable mutable containers.</p></blockquote><blockquote><p>Values of the Cell<!-- raw HTML omitted --> and RefCell<!-- raw HTML omitted --> types may be mutated through shared references (i.e. the common &amp;T type), whereas most Rust types can only be mutated through unique (&amp;mut T) references. We say that Cell<!-- raw HTML omitted --> and RefCell<!-- raw HTML omitted --> provide 'interior mutability', in contrast with typical Rust types that exhibit 'inherited mutability'.</p></blockquote><blockquote><p>Cell types come in two flavors: Cell<!-- raw HTML omitted --> and RefCell<!-- raw HTML omitted -->. Cell<!-- raw HTML omitted --> provides get and set methods that change the interior value with a single method call. Cell<!-- raw HTML omitted --> though is only compatible with types that implement Copy. For other types, one must use the RefCell<!-- raw HTML omitted --> type, acquiring a write lock before mutating.</p></blockquote><blockquote><p>RefCell<!-- raw HTML omitted --> uses Rust's lifetimes to implement 'dynamic borrowing', a process whereby one can claim temporary, exclusive, mutable access to the inner value. Borrows for RefCell<!-- raw HTML omitted -->s are tracked 'at runtime', unlike Rust's native reference types which are entirely tracked statically, at compile time. Because RefCell<!-- raw HTML omitted --> borrows are dynamic it is possible to attempt to borrow a value that is already mutably borrowed; when this happens it results in thread panic.</p></blockquote><h2 id="HDYA">Ref &amp; RefMut</h2><h3 id="mTmv">Ref::map()</h3><ol><li>mine</li></ol><pre><code class="language-rust">map(Ref&lt; T&gt;, f: F) -&gt; Ref&lt;U&gt;// Get Ref&lt;T&gt; from Ref&lt;Node&lt;T&gt;&gt;// my examplepub fn peek_front(&amp;self) -&gt; Option&lt;Ref&lt;T&gt;&gt; {    self.head.as_ref().map(|node| {        Ref::map(node.borrow(), |node| &amp;node.elem)    })}</code></pre><ol start="2"><li>from std lib</li></ol><pre><code class="language-rust">Makes a new Ref for a component of the borrowed data.The RefCell is already immutably borrowed, so this cannot fail.This is an associated function that needs to be used as Ref::map(...). A method would interfere with methods of the same name on the contents of a RefCell used through Deref.Examplesuse std::cell::{RefCell, Ref};let c = RefCell::new((5, 'b'));let b1: Ref&lt;(u32, char)&gt; = c.borrow();let b2: Ref&lt;u32&gt; = Ref::map(b1, |t| &amp;t.0);assert_eq!(*b2, 5)</code></pre><h3 id="AHmp">RefMut::map()</h3><p>同上</p><h2 id="HDez"></h2></div>
+      </div>
+      
+    </div>
+  </div>
+  <script src="../assets/js/prism.js"></script>
+</body>
+</html>

@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }}</title>
 
-    <link rel="stylesheet" type="text/css" href="./assets/css/prism.css"/>
-    <link rel="stylesheet" type="text/css" href="./assets/css/index.css"/>
+    <link rel="stylesheet" type="text/css" href="../assets/css/prism.css"/>
+    <link rel="stylesheet" type="text/css" href="../assets/css/index.css"/>
 
     <script type="text/javascript">
       function a(obj) {
@@ -19,10 +19,7 @@
             childnode.hidden = false
           }
         }
-      }
-
-      function fun() {
-        
+        return false
       }
     </script>
 </head>
@@ -37,14 +34,14 @@
         </div>
       </div>
 
-      <div class = "sidebar"> {{ sidebar_content }}</div></div>
+      <div class = "sidebar"> {{ sidebar_content }}</div></div></div>
 
       <div class = "page">
         <div class = "content">{{ page_content }}</div>
       </div>
-
+      
     </div>
   </div>
-  <script src="./assets/js/prism.js"></script>
+  <script src="../assets/js/prism.js"></script>
 </body>
 </html>
