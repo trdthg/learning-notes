@@ -3,9 +3,7 @@
 
 ## MicroPython
 
-### MicroPython --- esp8266
-
-#### 运行
+### 运行
 
 1. 准备项目
 - 下载win10usb-series的驱动[个人用]()
@@ -26,7 +24,7 @@ Type "help()" for more information.
 putty连接时,若键盘无法输入，尝试设置 (Connection -> Serial -> Flow control = None)
 :::
 
-#### 连接WiFi
+### 连接WiFi
 
 - 连接
 ```python
@@ -72,7 +70,7 @@ def main():
 main()
 ```
 
-#### WebREPL上传文件
+### WebREPL上传文件
 webrepl是MicroPython官方提供的文件管理工具。 并且有一个webrepl客户端工具， 使用它可以通过浏览器来访ESP8266。
 
 1. 初始化(putty)
@@ -90,7 +88,7 @@ webrepl.start()
 - 如果你的电脑和ESP8266在同一个局域网，修改WebREPL要连接的地址为ESP8266的IP，点击「Connect」，返回「Welcome to MicroPython!」说明连接成功，根据提示输入密码（密码默认不显示）。回车后显示「WebREPL connected」表示登录成功。
 - 之后就可以用这个客户端上传下载文件了。
 
-#### 待续...
+### 待续...
 
 ## Conda
 

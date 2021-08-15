@@ -20,6 +20,7 @@ toml = "0.5"
 chrono = "0.4.10"
 
 json = "0.12.4"
+nanoid = ""
 
 [profile.release]
 lto = true

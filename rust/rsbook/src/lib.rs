@@ -1,16 +1,11 @@
-extern crate serde_json;
-
-pub mod util;
 pub mod template;
+pub mod util;
 
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
 use std::collections::HashMap;
+use std::fs::File;
+use std::path::Path;
 
 use util::file::*;
-
-use comrak::{markdown_to_html, ComrakOptions};
 
 #[derive(Debug)]
 pub struct Config {
@@ -21,23 +16,25 @@ pub struct Config {
 }
 
 pub fn bookbuild(project_name: &str) {
-
+    println!("+-- reading conf...");
     let config: Config = bookbuild_read_config(project_name);
-    println!("{:#?}", config);
+    println!("+-- building dirs...");
     bookbuild_newdir(".", project_name);
 
+    println!("+-- creating templates...");
     // 创建模板文件
     let dist = &format!("{}/docs/.rsbook/dist", project_name);
     let docs = &format!("{}/docs", project_name);
     // template::create_README(dist);
-    template::create_default_index(docs, dist, config);
+    template::create_default_index(docs, dist, &config);
+    template::create_all(docs, dist, &config);
     template::create_index_css(dist);
     template::create_github_min_css(dist);
     template::creage_highlight_min_js(dist);
 }
 
 pub fn bookbuild_read_config(project_name: &str) -> Config {
-    let mut config_file = File::open(format!(
+    let config_file = File::open(format!(
         "{}/{}/{}/{}",
         project_name, "docs", ".rsbook", "config.json"
     ))
@@ -57,23 +54,25 @@ pub fn bookbuild_read_config(project_name: &str) -> Config {
     // pub fn as_array(&self) -> Option<&Vec<Value>> {
     if let Some(vec) = config["nav"].as_array() {
         for elem in vec {
-            nav_map.insert(elem["text"].as_str().unwrap().to_string(), elem["link"].as_str().unwrap().to_string());
+            nav_map.insert(
+                elem["text"].as_str().unwrap().to_string(),
+                elem["link"].as_str().unwrap().to_string(),
+            );
         }
     }
-    println!("{}", config["themeConfig"]["sidebar"]);
     if let Some(vec) = config["themeConfig"]["sidebar"].as_array() {
         for elem in vec {
-            if let Some(pages) = elem["pages"].as_array().take().map(|json| { json }) {
+            if let Some(pages) = elem["pages"].as_array().take().map(|json| json) {
                 let mut newpages: Vec<String> = Vec::new();
                 for page in pages {
-                    newpages.push(String::from(page.as_str().unwrap())) ;
+                    newpages.push(String::from(page.as_str().unwrap()));
                 }
-                sidebar_map.insert( elem["link"].as_str().unwrap().to_string(), newpages);
+                sidebar_map.insert(elem["link"].as_str().unwrap().to_string(), newpages);
             }
         }
     }
     Config {
-        title, 
+        title,
         icon,
         nav_map,
         sidebar_map,
@@ -101,7 +100,6 @@ pub fn bookbuild_newdir(base_dir: &str, project_name: &str) {
     }
 }
 
-
 pub fn booknew(base_dir: &str, project_name: &str) {
     // 1. create dist menu
     let dirs = vec![
@@ -127,10 +125,12 @@ pub fn booknew(base_dir: &str, project_name: &str) {
         let temp = Path::new(temp);
         create_file(temp.to_str().unwrap());
     }
-    
+
     template::create_default_config(project_name);
     template::create_hello_vue(project_name);
-    template::create_README(project_name);
+    template::create_readme(project_name);
 }
 
-pub fn bookclean(project_name: &str) {}
+pub fn bookclean(project_name: &str) {
+    println!("{}", project_name);
+}

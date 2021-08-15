@@ -21,7 +21,6 @@ class SQLHelper(object):
     @staticmethod
     #处理关闭连接的功能
     def close(conn, cursor):
-
         conn.commit()
         cursor.close()
         conn.close()
@@ -34,6 +33,14 @@ class SQLHelper(object):
         obj = cursor.fetchone()
         cls.close(conn,cursor)
         return obj
+
+    @classmethod
+    def execute(cls, sql, cursor = pymysql.cursors.DictCursor):
+        conn,cursor = cls.open(cursor)
+        cursor.execute(sql)
+        res = cursor.fetchone()
+        cls.close(conn,cursor)
+        return res
 
     @classmethod
     #处理查找多个的功能

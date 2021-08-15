@@ -33,11 +33,11 @@ def create_app(test_config=None):
             setsession=[],  # 开始会话前执行的命令列表。如：["set datestyle to ...", "set time zone ..."]
             ping=0,
             # ping MySQL服务端，检查是否服务可用。# 如：0 = None = never, 1 = default = whenever it is requested, 2 = when a cursor is created, 4 = when a query is executed, 7 = always
-            host='localhost',
-            port=3306,
-            user='root',
-            password='hj689753',
-            database='tmp',#链接的数据库的名字
+            host='bj-cynosdbmysql-grp-2w3ca8rc.sql.tencentcdb.com',
+            port=25197,
+            user='tmp',
+            password='Aa1@0000',
+            database='demo',#链接的数据库的名字
             charset='utf8'
         ),
         # 配置原生文件上传, 覆盖
@@ -46,7 +46,7 @@ def create_app(test_config=None):
         MAX_CONTENT_LENGTH = 16 * 1000 * 1000,  # 最大文件大小 16M
         # flask_uploads文件上传, 若存在则加后缀
         UPLOADED_PHOTOS_DEST = path.join(path.dirname(path.abspath(__file__)), "uploads"),
-        UPLOADED_FILES_ALLOW = ['apk', 'zip'],  # 配置允许的扩展名，其他的都是不允许,
+        UPLOADED_FILES_ALLOW = ['apk', 'zip', 'jpg'],  # 配置允许的扩展名，其他的都是不允许,
         UPLOADED_FILES_DENY = ['html'], # 配置不允许的扩展名
     )
     
@@ -64,7 +64,11 @@ def configure_folders(app):
 def configure_views(app):
     # 配置视图文件夹
     from views import account as views_account
+    from views import article as views_article
+    from views import sentence as views_sentence
     app.register_blueprint(views_account.account)
+    app.register_blueprint(views_article.article)
+    app.register_blueprint(views_sentence.sentence)
 
 def configure_handler(app):
 
@@ -81,7 +85,6 @@ def configure_handler(app):
     @is_login
     def nanoid(n = 10):
         return generate(size=n)
-    
 
 if __name__ == '__main__':
     app = create_app()

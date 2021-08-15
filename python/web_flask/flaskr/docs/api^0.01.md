@@ -10,10 +10,8 @@
 
 ## 个人
 
-### 未登录
-
-#### 登录
-1. res
+### √ 登录
+1. req
 ```json
 {
     "url":  "http://127.0.0.1:5000/account/login",
@@ -24,7 +22,7 @@
     }
 }
 ```
-2. res
+2. req
 ```json
 {
     "code": 1,
@@ -33,15 +31,12 @@
 }
 ```
 
-#### 注册
-1. res
+### √ 注册
+1. req
 ```json
 {
     "url":  "http://127.0.0.1:5000/account/register",
     "method": "post",
-    "header": {
-        "Authorization": "token",
-    },
     "body": {
         "username": "root",
         "password": "000000",
@@ -53,14 +48,13 @@
 ```json
 {
     "code": 1,
+    "msg": "success",
     "user_id": 1,
 }
 ```
 
-### 登录
-
-#### 获取个人资料
-1. res
+### √ 获取个人资料
+1. req
 ```json
 {
     "url":  "http://127.0.0.1:5000/account/get_userinfo",
@@ -68,24 +62,22 @@
     "header": {
         "Authorization": "token",
     },
-    "params": {
-        
-    }
-    
 }
 ```
 2. res
 ```json
 {
     "code": 1,
-    "username": "",
-    "email": "",
-    "avatar": "",
+    "userinfo": {
+        "avatar": "avatar_2_xrfuO61aqbTrR8ilkk.jpg",
+        "email": "1@qq.com",
+        "username": "1"
+    }
 }
 ```
 
-#### 上传头像
-1. res
+### √ 上传头像
+1. req
 ```json
 {
     "url":  "http://127.0.0.1:5000/account/upload_avatar",
@@ -93,7 +85,7 @@
     "header": {
         "Authorization": "token",
     },
-    "params": {
+    "form": {
         "avatar": "sssss.jpg"
     }
 }
@@ -102,12 +94,30 @@
 ```json
 {
     "code": 1,
-    "user_id": 1,
 }
 ```
 
-#### 获取待读
-1. res
+### √ 获取头像
+1. req
+```json
+{
+    "url":  "http://127.0.0.1:5000/account/get_avatar",
+    "method": "post",
+    "header": {
+        "Authorization": "token",
+    },
+}
+```
+2. res
+```json
+{
+    "code": "1",
+    "avatar_url": "/static/avatar/avatar_2_xrfuO61aqbTrR8ilkk.jpg"
+}
+```
+
+### √ 获取待读
+1. req
 ```json
 {
     "url":  "http://127.0.0.1:5000/account/get_toberead",
@@ -138,8 +148,8 @@
 }
 ```
 
-#### 获取摘记
-1. res
+### 获取摘记
+1. req
 ```json
 {
     "url":  "http://127.0.0.1:5000/account/get_excerpt",
@@ -176,8 +186,8 @@
 }
 ```
 
-#### 获取足迹
-1. res
+### 获取足迹
+1. req
 ```json
 {
     "url":  "http://127.0.0.1:5000/account/get_history",
@@ -208,8 +218,8 @@
 }
 ```
 
-#### 获取收藏
-1. res
+### 获取收藏
+1. req
 ```json
 {
     "url":  "http://127.0.0.1:5000/account/get_favorite",
@@ -240,10 +250,10 @@
 }
 ```
 
-## 新注册用户
+## 新注册
 
 ### 获取分类标签
-1. res
+1. req
 ```json
 {
     "url":  "http://127.0.0.1:5000/account/get_tags",
@@ -274,7 +284,7 @@
 ```
 
 ### 标签选择
-1. res
+1. req
 ```json
 {
     "url":  "http://127.0.0.1:5000/account/upload_favorite_tags",
@@ -296,48 +306,13 @@
 
 ## 发现
 
-### 评论展示
-
-#### 获取句子
-1. res
-```json
-{
-    "url":  "http://127.0.0.1:5000/comment/get_sentence",
-    "method": "get",
-    "header": {
-        "Authorization": "token",
-    },
-    "params": {
-
-    }
-}
-```
-2. res
-```json
-{
-    "code": 1,
-    "list": [
-        {
-            "sentence_id": 1,
-            "sentence": "sssssssssssssssssss",
-            "origin_link": "xxxxxxx",
-        },
-        {
-            "sentence_id": 1,
-            "sentence": "sssssssssssssssssss",
-            "origin_link": "xxxxxxx",
-        },
-    ]
-}
-```
-
 ### 作者社区
 无[dog]
 
-## 今日杂志
+## 杂志
 
 ### 获取杂志
-1. res
+1. req
 ```json
 {
     "url":  "http://127.0.0.1:5000/today/get_magazine",
@@ -374,13 +349,86 @@
 }
 ```
 
-### 文章
-
-#### 对句子的评论 
-1. res
+### √ 文章加入待读
+1. req
 ```json
 {
-    "url":  "http://127.0.0.1:5000/comment/sentence",
+    "url":  "http://127.0.0.1:5000/article/toberead",
+    "method": "get",
+    "header": {
+        "Authorization": "token",
+    },
+    "params": {
+        "article_id": 1
+    }
+}
+```
+2. res
+```json
+{
+    "code": 1,
+}
+```
+
+## 评论
+
+### √ 评论文章
+1. req
+```json
+{
+    "url":  "http://127.0.0.1:5000/article/comment",
+    "method": "post",
+    "header": {
+        "Authorization": "token",
+    },
+    "body": {
+        "article_id": "",
+        "comment": "ssssssssssssssssssssssssssssssssssssssssssssssssssssss",
+    }
+}
+```
+2. res
+```json
+{
+    "code": 1,
+}
+```
+
+### √ 获取文章评论
+1. req
+```json
+{
+    "url":  "http://127.0.0.1:5000/article/get_comment",
+    "method": "get",
+    "header": {
+        "Authorization": "token",
+    },
+    "params": {
+        "sarticle_id": 1,
+    }
+}
+```
+2. res
+```json
+{
+    "code": 1,
+    "list": [
+        {
+            "comment": "一条评论",
+            "create_time": "Sat, 14 Aug 2021 13:24:33 GMT",
+            "user_id": 2,
+            "username": "1"
+        }
+    ]
+}
+```
+
+
+### √ 评论句子 
+1. req
+```json
+{
+    "url":  "http://127.0.0.1:5000/sentence/comment",
     "method": "post",
     "header": {
         "Authorization": "token",
@@ -401,11 +449,11 @@
 }
 ```
 
-#### 获取评论
-1. res
+### √ 获取句子评论
+1. req
 ```json
 {
-    "url":  "http://127.0.0.1:5000/comment/get_sentence_comment",
+    "url":  "http://127.0.0.1:5000/sentence/get_comment",
     "method": "get",
     "header": {
         "Authorization": "token",
@@ -421,19 +469,14 @@
     "code": 1,
     "list": [
         {
-            "sentence_id": 1,
-            "comment": "sssssssssssssssssss",
-            "user_id": 1,
-            "username": "asdadawdawd",
-            "avatar": "xxx.jpg",
-        },
-        {
-            "sentence_id": 1,
-            "comment": "sssssssssssssssssss",
-            "user_id": 1,
-            "username": "asdadawdawd",
-            "avatar": "xxx.jpg",
-        },
+            "comment": "对该句子的评论",
+            "create_time": "Sat, 14 Aug 2021 15:33:38 GMT",
+            "father_id": 1,
+            "user_id": 2,
+            "username": "1"
+        }
     ]
 }
 ```
+
+## 其他

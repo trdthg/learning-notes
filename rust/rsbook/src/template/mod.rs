@@ -1,8 +1,7 @@
-extern crate regex;
-
 use std::path::Path;
 
 use crate::util::file::*;
+use crate::util::parse::*;
 use crate::Config;
 
 use std::fs;
@@ -12,27 +11,84 @@ use std::io::prelude::*;
 use comrak::{markdown_to_html, ComrakOptions};
 use regex::Regex;
 
-pub fn create_default_index(docs: &str, dist: &str, config: Config) {
-    let content = &fs::read_to_string("assets/index.html").unwrap();
+pub fn create_default_index(docs: &str, dist: &str, config: &Config) {
+    let content = fs::read_to_string("assets/index.html").unwrap();
 
     // title
     let re_module = Regex::new(r"\{\{\s*title\s*\}\}").unwrap();
-    let content = &String::from(re_module.replace_all(content, &config.title));
-    // content
+    let content = &String::from(re_module.replace_all(&content, &config.title));
+
+    // index
+    let re_module = Regex::new(r"\{\{\s*index\s*\}\}").unwrap();
+    let content = &String::from(re_module.replace_all(&content, "index.html"));
+
+    // nav_links
+    let re_module = Regex::new(r"\{\{\s*links\s*\}\}").unwrap();
+    let links = get_links_index(&config.nav_map);
+    let content = &String::from(re_module.replace_all(content, links));
+
+    // sidebar_content
+    let re_module = Regex::new(r"\{\{\s*sidebar_content\s*\}\}").unwrap();
+    let sidebar_content = get_titles("assets/README.md");
+    let content = &String::from(re_module.replace_all(content, sidebar_content));
+
+    // page_content
     let re_module = Regex::new(r"\{\{\s*page_content\s*\}\}").unwrap();
     let md_content = fs::read_to_string(format!("{}/README.md", docs)).unwrap();
     let md_html = markdown_to_html(&md_content, &ComrakOptions::default());
-    let md_content = &String::from(re_module.replace_all(content, md_html));
+    let content = &String::from(re_module.replace_all(content, md_html));
 
+    // create new index file
     let default_config_file = &format!("{}/{}", dist, "index.html");
     let config_file = Path::new(default_config_file);
-    write_file(config_file.to_str().unwrap(), md_content);
+    write_file(config_file.to_str().unwrap(), content);
+}
+
+pub fn create_all(docs: &str, dist: &str, config: &Config) {
+
+    let map = &config.sidebar_map;
+    for (k, v) in map {
+        let folder_name = k;
+        create_dirs(&format!("{}/{}",dist, folder_name));
+        for file_name in v {
+            let content = fs::read_to_string("assets/index.html").unwrap();
+            // title
+            let re_module = Regex::new(r"\{\{\s*title\s*\}\}").unwrap();
+            let content = &String::from(re_module.replace_all(&content, &config.title));
+
+            // index
+            let re_module = Regex::new(r"\{\{\s*index\s*\}\}").unwrap();
+            let content = &String::from(re_module.replace_all(&content, "../index.html"));
+
+            // nav_links
+            let re_module = Regex::new(r"\{\{\s*links\s*\}\}").unwrap();
+            let links = get_links(&config.nav_map);
+            let content = &String::from(re_module.replace_all(content, links));
+
+            // sidebar_content
+            let re_module = Regex::new(r"\{\{\s*sidebar_content\s*\}\}").unwrap();
+            let sidebar_content = get_titles(&format!("{}/{}/{}.md", docs, folder_name, file_name));
+            let content = &String::from(re_module.replace_all(content, sidebar_content));
+
+            // page_content
+            let re_module = Regex::new(r"\{\{\s*page_content\s*\}\}").unwrap();
+            let md_content = fs::read_to_string(&format!("{}/{}/{}.md", docs, folder_name, file_name)).unwrap();
+            let md_html = markdown_to_html(&md_content, &ComrakOptions::default());
+            let content = &String::from(re_module.replace_all(content, md_html));
+
+            // create new index file
+            let default_config_file = &format!("{}/{}/{}.html", dist, folder_name, file_name);
+            let config_file = Path::new(default_config_file);
+            println!("{}", config_file.display());
+            write_file(config_file.to_str().unwrap(), content);
+        }
+    }
 
 }
 
 pub fn create_github_min_css(dist: &str) {
-    let content = &fs::read_to_string("assets/css/github.min.css").unwrap();
-    let default_config_file = &format!("{}/{}", dist, "assets/css/github.min.css");
+    let content = &fs::read_to_string("assets/css/prism.css").unwrap();
+    let default_config_file = &format!("{}/{}", dist, "assets/css/prism.css");
     let config_file = Path::new(default_config_file);
     write_file(config_file.to_str().unwrap(), content);
 }
@@ -45,12 +101,11 @@ pub fn create_index_css(dist: &str) {
 }
 
 pub fn creage_highlight_min_js(dist: &str) {
-    let content = &fs::read_to_string("assets/js/highlight.min.js").unwrap_or("sss".to_string());
-    let default_config_file = &format!("{}/{}", dist, "assets/js/highlight.min.js");
+    let content = &fs::read_to_string("assets/js/prism.js").unwrap_or("sss".to_string());
+    let default_config_file = &format!("{}/{}", dist, "assets/js/prism.js");
     let config_file = Path::new(default_config_file);
     write_file(config_file.to_str().unwrap(), content);
 }
-
 
 pub fn create_default_config(project_name: &str) {
     // create default config file
@@ -85,10 +140,10 @@ pub fn create_hello_vue(project_name: &str) {
     write_file(config_file.to_str().unwrap(), content);
 }
 
-pub fn create_README(project_name: &str) {
-    let content = &fs::read_to_string("assets/python.md").unwrap();
+pub fn create_readme(project_name: &str) {
+    let content = &fs::read_to_string("assets/README.md").unwrap();
     // let md_html = markdown_to_html(&md_content, &ComrakOptions::default());
     let default_config_file = &format!("{}/{}", project_name, "docs/README.md");
     let config_file = Path::new(default_config_file);
     write_file(config_file.to_str().unwrap(), content);
-} 
+}

@@ -6,7 +6,7 @@ from flask import request, redirect, current_app, session
 
 from utils.tokenUtil import TokenHelper
 
-
+# 登录拦截器
 def is_login(func):
     @wraps(func)
     def wrapper():

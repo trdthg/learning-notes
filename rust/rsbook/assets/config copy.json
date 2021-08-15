@@ -10,7 +10,11 @@
         "lastUpdated": "Last Updated",
         "sidebarDepth": 3,
         "sidebar": [
-           
+            {"link": "java", "pages": ["java", "sourceread", "spring", "springboot", "stuffs"]},
+            {"link": "js", "pages": ["js", "vue"]},
+            {"link": "python", "pages": ["python"]},
+            {"link": "rust", "pages": ["rust", "lists", "wasm"]},
+            {"link": "other", "pages": ["other", "script", "datastructure"]}
         ]
     },
     "nav": [
