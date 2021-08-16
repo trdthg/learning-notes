@@ -2,13 +2,10 @@ import os
 import sys
 import time
 
-from nanoid import generate
-from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, request, session, redirect, current_app, flash, url_for
 
 sys.path.append(".")
 from utils.db import SQLHelper
-from utils.tokenUtil import TokenHelper
 from utils.wrappers import *
 
 sentence = Blueprint('sentence', __name__, url_prefix='/sentence')

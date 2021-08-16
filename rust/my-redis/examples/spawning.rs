@@ -7,7 +7,7 @@ async fn main() {
     loop {
         let (socket, addr) = listener.accept().await.unwrap();
         println!("{}", addr);
-
+`3
         // A new task is spawned for each inbound socket. The socket is moved to the new task and processed there.
         tokio::spawn(async move {
             handle_connection(socket).await;

@@ -2,20 +2,17 @@ import os
 import sys
 import time
 
-from nanoid import generate
-from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, request, session, redirect, current_app, flash, url_for
 
 sys.path.append(".")
 from utils.db import SQLHelper
-from utils.tokenUtil import TokenHelper
 from utils.wrappers import *
 
 article = Blueprint('article', __name__, url_prefix='/article')
 
 @article.route('/toberead',methods=["GET"])
 @is_login
-def favorite(user_id):
+def toberead(user_id):
     try: 
         nowtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) 
         article_id = request.args.get("article_id")

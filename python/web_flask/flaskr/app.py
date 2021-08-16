@@ -66,9 +66,11 @@ def configure_views(app):
     from views import account as views_account
     from views import article as views_article
     from views import sentence as views_sentence
+    from views import megazine as views_megazine
     app.register_blueprint(views_account.account)
     app.register_blueprint(views_article.article)
     app.register_blueprint(views_sentence.sentence)
+    app.register_blueprint(views_megazine.megazine)
 
 def configure_handler(app):
 

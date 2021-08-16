@@ -46,3 +46,4 @@ build/
 .vscode/
 
 rust/rsbook/assets/js/highlight.min.js
+rust/hello_radio/assets/1.flac
