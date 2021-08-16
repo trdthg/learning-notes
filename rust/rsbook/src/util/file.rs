@@ -2,6 +2,7 @@ use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
+use std::time::SystemTime;
 
 pub fn create_dirs(dir: &str) {
     if !Path::new(dir).exists() {
@@ -27,6 +28,17 @@ pub fn create_file(path: &str) {
 pub fn write_file(path: &str, content: &str) {
     let mut f = File::create(path).unwrap();
     f.write_all(content.as_bytes());
+}
+
+pub fn get_changetime(path_str: &str) -> u64 {
+    let file = File::open(path_str).unwrap();
+    let metadata = file.metadata().unwrap();
+    let mtime = metadata.modified().unwrap();
+    let secs = match mtime.duration_since(SystemTime::UNIX_EPOCH) {
+        Ok(duration) => duration.as_secs(),
+        Err(_) => 0,
+    };
+    secs
 }
 
 #[cfg(test)]

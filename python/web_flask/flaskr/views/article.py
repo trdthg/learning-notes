@@ -51,7 +51,8 @@ def get_comment(user_id):
         res = SQLHelper().fetch_all('''
             SELECT c.user_id, u.username, c.comment, c.create_time
             FROM (comment_article c, user u)
-            WHERE (c.article_id = %s AND u.id = c.user_id)''', (
+            WHERE (c.article_id = %s AND u.id = c.user_id)
+            LIMIT 3 OFFSET 0''', (
                 article_id
             ))
         return {'code': 1, 'list': res}

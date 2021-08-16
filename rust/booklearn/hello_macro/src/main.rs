@@ -1,16 +1,9 @@
-
-
-
-
 use hello_macro::HelloMacro;
+use hello_macro_derive::HelloMacro;
 
+#[derive(HelloMacro)]
 struct Pancakes;
-impl HelloMacro for Pancakes {
-    fn hello() {
-        println!("Pancakes: Hello, Macro")
-    }
-}
 
 fn main() {
-    Pancakes::hello();
+    Pancakes::hello_macro();
 }
