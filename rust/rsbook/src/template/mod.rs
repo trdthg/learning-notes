@@ -5,8 +5,6 @@ use crate::util::parse::*;
 use crate::Config;
 
 use std::fs;
-use std::fs::File;
-use std::io::prelude::*;
 
 use comrak::{markdown_to_html, ComrakOptions};
 use regex::Regex;
@@ -50,6 +48,8 @@ pub fn create_all(docs: &str, dist: &str, config: &Config) {
     for (k, v) in map {
         let folder_name = k;
         create_dirs(&format!("{}/{}",dist, folder_name));
+        let mut sidebars = String::new();
+        let mut contents: Vec<String> = Vec::new();
         for file_name in v {
             let content = fs::read_to_string("assets/other.html").unwrap();
             let md = &format!("{}/{}/{}.md", docs, folder_name, file_name);
@@ -70,13 +70,19 @@ pub fn create_all(docs: &str, dist: &str, config: &Config) {
             // page_content && sidebar_content
             let md_content = fs::read_to_string(md).unwrap();
             let md_html = markdown_to_html(&md_content, &ComrakOptions::default());
-            let (md_html, sidebar_content) = get_titles_from_html(&md_html);
+            let (md_html, sidebar_content) = get_titles_from_html(&md_html, &file_name);
 
-            let re_module = Regex::new(r"\{\{\s*sidebar_content\s*\}\}").unwrap();
-            let content = &String::from(re_module.replace_all(content, sidebar_content));
             let re_module = Regex::new(r"\{\{\s*page_content\s*\}\}").unwrap();
-            let content = &String::from(re_module.replace_all(content, md_html));
-
+            let content = String::from(re_module.replace_all(content, md_html));
+            
+            sidebars.push_str(&sidebar_content);
+            contents.push(content);
+        }
+        for i in 0..v.len() {
+            let file_name = &v[i];
+            let content = &contents[i];
+            let re_module = Regex::new(r"\{\{\s*sidebar_content\s*\}\}").unwrap();
+            let content = &String::from(re_module.replace_all(content, &sidebars));
             // create new index file
             let default_config_file = &format!("{}/{}/{}.html", dist, folder_name, file_name);
             let config_file = Path::new(default_config_file);

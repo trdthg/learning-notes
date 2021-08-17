@@ -100,7 +100,7 @@ pub fn bookbuild_newdir(base_dir: &str, project_name: &str) {
     }
 }
 
-pub fn booknew(base_dir: &str, project_name: &str) {
+pub fn booknew(project_name: &str) {
     // 1. create dist menu
     let dirs = vec![
         "docs/.rsbook/",
@@ -116,12 +116,12 @@ pub fn booknew(base_dir: &str, project_name: &str) {
         "deploy.cmd",
     ];
     for path in dirs {
-        let temp: &str = &format!("{}/{}/{}", base_dir, project_name, path);
+        let temp: &str = &format!("{}/{}", project_name, path);
         let temp = Path::new(temp);
         create_dirs(temp.to_str().unwrap());
     }
     for path in files {
-        let temp: &str = &format!("{}/{}/{}", base_dir, project_name, path);
+        let temp: &str = &format!("{}/{}", project_name, path);
         let temp = Path::new(temp);
         create_file(temp.to_str().unwrap());
     }

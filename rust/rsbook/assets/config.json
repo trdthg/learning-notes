@@ -10,7 +10,7 @@
         "lastUpdated": "Last Updated",
         "sidebarDepth": 3,
         "sidebar": [
-           
+            {"link": "rust", "pages": ["rust", "lists", "wasm"]}
         ]
     },
     "nav": [

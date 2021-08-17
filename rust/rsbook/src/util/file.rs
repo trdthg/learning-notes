@@ -15,7 +15,7 @@ pub fn create_dirs(dir: &str) {
 
 pub fn create_file(path: &str) {
     let path = Path::new(&path);
-    let mut file = match File::create(path) {
+    match File::create(path) {
         Err(why) => panic!("create {}: {}", path.display(), why.to_string()),
         Ok(file) => file,
     };
@@ -27,7 +27,7 @@ pub fn create_file(path: &str) {
 
 pub fn write_file(path: &str, content: &str) {
     let mut f = File::create(path).unwrap();
-    f.write_all(content.as_bytes());
+    f.write_all(content.as_bytes()).unwrap();
 }
 
 pub fn get_changetime(path_str: &str) -> u64 {

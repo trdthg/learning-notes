@@ -119,7 +119,7 @@ pub fn get_titles(path: &str) -> String {
     buf
 }
 
-pub fn get_titles_from_html(html: &str) -> (String, String) {
+pub fn get_titles_from_html(html: &str, file_name: &str) -> (String, String) {
     let lines: Vec<&str> = html.split("\n").collect();
     let mut new_lines = String::new();
 
@@ -141,9 +141,9 @@ pub fn get_titles_from_html(html: &str) -> (String, String) {
         if is_incode == 1 {
             continue;
         }
+        new_lines.push_str("\n");
         if line.starts_with("<h") {
             // 获得标题
-            let new_line = "";
             if line.starts_with("<h1") {
                 text = line.replace("<h1>", "").replace("</h1>", "");
                 let new_line = &line.replace("<h1>", &format!(r#"<h1 id="{}">"#, random_id));
@@ -198,32 +198,32 @@ pub fn get_titles_from_html(html: &str) -> (String, String) {
         if len > fa_len {
             more_count += 1;
             buf.push_str(&format!(
-                r##"<div class="desc h{}" onclick="return a(this)"><a href="#{}"><span>{}</span></a></div><div class="more">"##,
-                fa_len, random_ids[index], texts[index]
+                r##"<div class="desc h{}" onclick="return a(this)"><a href="./{}.html#{}"><span>{}</span></a></div><div class="more">"##,
+                fa_len, file_name, random_ids[index], texts[index]
             ));
         } else if fa_len == len {
             buf.push_str(&format!(
-                r##"<div class="item h{}" ><a href="#{}"><span>{}</span></a></div>"##,
-                fa_len, random_ids[index], texts[index]
+                r##"<div class="item h{}"><a href="./{}.html#{}"><span>{}</span></a></div>"##,
+                fa_len, file_name, random_ids[index], texts[index]
             ));
         } else {
             buf.push_str(&format!(
-                r##"<div class="item h{}"><a href="#{}"><span>{}</span></a></div>"##,
-                fa_len, random_ids[index], texts[index]
+                r##"<div class="item h{}"><a href="./{}.html#{}"><span>{}</span></a></div>"##,
+                fa_len, file_name, random_ids[index], texts[index]
             ));
             if len == 0 {
                 break;
             }
-            more_count -= fa_len - len;
-            for _i in [..(fa_len - len)] {
+            for _i in 0..(fa_len - len) {
                 buf.push_str("</div>");
             }
+            more_count -= fa_len - len;
         }
         index += 1;
         fa_len = len;
     }
 
-    for _i in [..more_count] {
+    for _i in 0..more_count {
         buf.push_str("</div>");
     }
     (new_lines, buf)

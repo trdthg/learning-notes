@@ -20,7 +20,8 @@ fn main() {
         base_dir = new_matches.value_of("base_dir").unwrap_or(".");
         // 创建基本文件结构
         println!("creating new project {} in {} ... ", project_name, base_dir);
-        booknew(base_dir, project_name);
+        let project_name = &format!("{}/{}",  base_dir, project_name);
+        booknew(project_name);
     }
 
     if let Some(build_matches) = matches.subcommand_matches("build") {
@@ -29,7 +30,7 @@ fn main() {
         base_dir = build_matches.value_of("base_dir").unwrap_or(".");
         // 创建基本文件结构
         println!("creating new project {} in {} ... ", project_name, base_dir);
-        println!("building project {} ... ", project_name);
+        let project_name = &format!("{}/{}",  base_dir, project_name);
         bookbuild(project_name);
     }
 
