@@ -1,12 +1,12 @@
-import os
-import sys
+import sys,os
+sys.path.append(os.path.dirname(__file__) + os.sep + '../')
+
 import time
 
 from nanoid import generate
 from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, request, session, redirect, current_app, flash, url_for
 
-sys.path.append(".")
 from utils.db import SQLHelper
 from utils.tokenUtil import TokenHelper
 from utils.wrappers import *
@@ -47,7 +47,12 @@ def register():
             (select id from user where username = %s)''', (
             info['username'], info['password'], info['email'], nowtime, nowtime, info['username'],
         ))
-        return {'code': 1}
+        user_id = SQLHelper().execute("SELECT max(id) from user").get("max(id)")
+        username = info['username']
+        session[username] = user_id
+        session.permanent = True
+        token = TokenHelper().encrpyt_token(username)
+        return {'code': 1, "token": token}
     except: 
         return {'code': 0, 'msg': "false"}
 
@@ -105,5 +110,42 @@ def get_toberead(user_id):
         return {"code": 1, "list": toberead}
     except:
         return {"code": 0, "msg": "获取待读失败"}
+
+@account.route('/get_history', methods=['GET'])
+@is_login
+def get_history(user_id):
+    try:
+        res = SQLHelper().fetch_all('''
+            SELECT a.id, a.title, a.url, a.nid 
+            FROM (user_history d, article a) 
+            WHERE (d.user_id = %s AND a.id = d.article_id)''', (user_id))
+        return {"code": 1, "list": res}
+    except:
+        return {"code": 0, "msg": "获取足迹失败"}
+
+@account.route('/get_favorite', methods=['GET'])
+@is_login
+def get_favorite(user_id):
+    try:
+        res = SQLHelper().fetch_all('''
+            SELECT a.id, a.title, a.url, a.nid 
+            FROM (user_favorite d, article a) 
+            WHERE (d.user_id = %s AND a.id = d.article_id)''', (user_id))
+        return {"code": 1, "list": res}
+    except:
+        return {"code": 0, "msg": "获取收藏失败"}
+
+@account.route('/get_excerpt',methods=["GET"])
+@is_login
+def get_excerpt(user_id):
+    try: 
+        res = SQLHelper().fetch_all('''
+            SELECT *
+            FROM user_excerpt 
+            WHERE user_id = %s''', (user_id))
+        return {'code': 1, 'list': res}
+    except:
+        return { 'code': 0, 'msg': '获取评论失败' }
+
 
 

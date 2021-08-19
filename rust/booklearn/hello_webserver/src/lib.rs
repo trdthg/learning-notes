@@ -1,3 +1,29 @@
+/*
+use std::thread;
+
+pub struct ThreadPool {
+    threads: Vec<thread::JoinHandle<()>>,
+}
+
+impl ThreadPool {
+    pub fn new(size: usize) -> ThreadPool {
+        assert!(size > 0);
+
+        let mut threads = Vec::with_capacity(size);
+        for _ in 0..size {
+            // creeate some threads and store them in the vec
+        }
+
+        ThreadPool { threads }
+    }
+
+    pub fn execute<F>(&self, f: F)
+    where
+        F: FnOnce() + Send + 'static,
+    {
+    }
+}
+*/
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -55,11 +81,11 @@ impl Worker {
                 let message = receiver.lock().unwrap().recv().unwrap();
                 match message {
                     Message::NewJob(job) => {
-                        println!("Worker {} got a job; executing.", id);
+                        // println!("Worker {} got a job; executing.", id);
                         job();
                     }
                     Message::Terminate => {
-                        println!("Worker {} was told to terminate.", id);
+                        // println!("Worker {} was told to terminate.", id);
                         break;
                     }
                 }
@@ -82,13 +108,13 @@ impl Worker {
 // Graceful Shutdown and Cleanup
 impl Drop for ThreadPool {
     fn drop(&mut self) {
-        println!("Sending terminate message to all workers.");
+        // println!("Sending terminate message to all workers.");
         for _ in &mut self.workers {
             self.sender.send(Message::Terminate).unwrap();
         }
-        println!("Shutting down all workers.");
+        // println!("Shutting down all workers.");
         for worker in &mut self.workers {
-            println!("Shutting down worker {}", worker.id);
+            // println!("Shutting down worker {}", worker.id);
             worker.thread.take().map(|thread| thread.join().unwrap());
         }
     }

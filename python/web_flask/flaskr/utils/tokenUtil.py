@@ -2,7 +2,7 @@ import time
 import jwt
 
 class TokenHelper(object):
-    exptime = time.time() + 60 * 30
+    exptime = time.time() + 60 * 30 * 2 * 24 * 3
     secret = 'iam'
 
     def __init__(self):

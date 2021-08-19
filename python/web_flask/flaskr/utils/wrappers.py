@@ -1,8 +1,9 @@
 import sys
 sys.path.append(".")
+
 from functools import wraps
 
-from flask import request, redirect, current_app, session
+from flask import request, redirect, current_app, session, jsonify
 
 from utils.tokenUtil import TokenHelper
 
@@ -21,6 +22,6 @@ def is_login(func):
                 user_id = user.get("id")
                 return func(user_id)
             except:
-                return {'msg': 'token 验证失败'}
+                return jsonify({'msg': 'token 验证失败'})
     wrapper.__name__ = func.__name__
     return wrapper

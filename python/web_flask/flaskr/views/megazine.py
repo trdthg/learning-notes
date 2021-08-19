@@ -10,12 +10,39 @@ from utils.wrappers import *
 
 megazine = Blueprint('megazine', __name__, url_prefix='/megazine')
 
-@megazine.route('/get_megazine',methods=["GET"])
-@is_login
-def favorite(user_id):
+@megazine.route('/get_summarys',methods=["GET"])
+def get_summarys():
     try: 
         nowtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) 
         category = request.args.get("category")
-        return {'code': 1}
+        res = SQLHelper.fetch_all('''
+            SELECT id, title, author, summary, link, content
+            FROM article
+            WHERE category = %s
+            ORDER BY RAND() LIMIT 20''', (category))
+        return {'code': 1, 'list': res}
     except:
         return { 'code': 0, 'msg': '加入待读失败' }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -25,6 +25,36 @@ def toberead(user_id):
     except:
         return { 'code': 0, 'msg': '加入待读失败' }
 
+@article.route('/history',methods=["GET"])
+@is_login
+def history(user_id):
+    try: 
+        nowtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) 
+        article_id = request.args.get("article_id")
+        res = SQLHelper().insert('''
+            insert into user_history(user_id, article_id, create_time) 
+            select %s, %s, %s from DUAL where not exists 
+            (select id from user_history where user_id = %s and article_id = %s)''', (
+            user_id, article_id, nowtime, user_id, article_id))
+        return {'code': 1}
+    except:
+        return { 'code': 0, 'msg': '加入足迹失败' }
+
+@article.route('/favorite',methods=["GET"])
+@is_login
+def favorite(user_id):
+    try: 
+        nowtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) 
+        article_id = request.args.get("article_id")
+        res = SQLHelper().insert('''
+            insert into user_favorite(user_id, article_id, create_time) 
+            select %s, %s, %s from DUAL where not exists 
+            (select id from user_favorite where user_id = %s and article_id = %s)''', (
+            user_id, article_id, nowtime, user_id, article_id))
+        return {'code': 1}
+    except:
+        return { 'code': 0, 'msg': '加入收藏失败' }
+
 @article.route('/comment',methods=["POST"])
 @is_login
 def comment(user_id):
@@ -55,6 +85,37 @@ def get_comment(user_id):
         return {'code': 1, 'list': res}
     except:
         return { 'code': 0, 'msg': '获取评论失败' }
+
+@article.route('/get_article',methods=["GET"])
+@is_login
+def get_article(user_id):
+    try: 
+        article_id = request.args["article_id"]
+        res = SQLHelper().fetch_all('''
+            SELECT *
+            FROM article
+            WHERE id = %s''', (
+                article_id
+            ))
+        return {'code': 1, 'list': res}
+    except:
+        return { 'code': 0, 'msg': '获取评论失败' }
+
+@article.route('/get_sentence_comment',methods=["GET"])
+@is_login
+def get_sentence_comment(user_id):
+    try: 
+        article_id = request.args["article_id"]
+        res = SQLHelper().fetch_all('''
+            SELECT s.sentence, cs.user_id, cs.comment, cs.create_time, u.username
+            FROM sentence s, comment_sentence cs, user u
+            WHERE s.article_id = %s AND cs.sentence_id = s.id AND u.id = cs.user_id''', (
+                article_id
+            ))
+        return {'code': 1, 'list': res}
+    except:
+        return { 'code': 0, 'msg': '获取评论失败' }
+
 
 
 

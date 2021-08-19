@@ -41,7 +41,7 @@ def get_comment(user_id):
     try: 
         sentence_id = request.args["sentence_id"]
         res = SQLHelper().fetch_all('''
-            SELECT c.user_id, u.username, c.comment, c.father_id, c.create_time
+            SELECT c.id, c.user_id, u.username, c.comment, c.father_id, c.create_time
             FROM (comment_sentence c, user u)
             WHERE (c.sentence_id = %s AND u.id = c.user_id)
             LIMIT 3 OFFSET 0''', (
@@ -51,6 +51,21 @@ def get_comment(user_id):
     except:
         return { 'code': 0, 'msg': '获取评论失败' }
 
+@sentence.route('/excerpt',methods=["POST"])
+@is_login
+def excerpt(user_id):
+    try: 
+        create_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) 
+        article_id = request.get_json()["article_id"]
+        sentence = request.get_json()["sentence"]
+        comment = request.get_json()["comment"]
+        SQLHelper().insert('''
+            INSERT INTO user_excerpt(user_id, sentence, article_id, comment, create_time)
+            VALUES (%s, %s, %s, %s, %s)''', (
+            user_id, sentence, article_id, comment, create_time))
+        return {'code': 1}
+    except:
+        return { 'code': 0, 'msg': '新建摘记失败' }
 
 
 

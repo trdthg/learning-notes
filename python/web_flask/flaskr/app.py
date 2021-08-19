@@ -31,10 +31,10 @@ def create_app(test_config=None):
             blocking=True,  # 连接池中如果没有可用连接后，是否阻塞等待。True，等待；False，不等待然后报错
             maxusage=None,  # 一个链接最多被重复使用的次数，None表示无限制
             setsession=[],  # 开始会话前执行的命令列表。如：["set datestyle to ...", "set time zone ..."]
-            ping=0,
             # ping MySQL服务端，检查是否服务可用。# 如：0 = None = never, 1 = default = whenever it is requested, 2 = when a cursor is created, 4 = when a query is executed, 7 = always
-            host='bj-cynosdbmysql-grp-2w3ca8rc.sql.tencentcdb.com',
-            port=25197,
+            ping=0,
+            host='bj-cynosdbmysql-grp-2r0nnbpu.sql.tencentcdb.com',
+            port=22241,
             user='tmp',
             password='Aa1@0000',
             database='demo',#链接的数据库的名字
@@ -53,7 +53,9 @@ def create_app(test_config=None):
     configure_folders(app)
     configure_handler(app)
     configure_views(app)
+    configure_cross(app)
     return app
+
 
 def configure_folders(app):
     # 配置上传文件夹
@@ -87,6 +89,14 @@ def configure_handler(app):
     @is_login
     def nanoid(n = 10):
         return generate(size=n)
+
+def configure_cross(app):
+    @app.after_request
+    def cors(environ):
+        environ.headers['Access-Control-Allow-Origin']='*'
+        environ.headers['Access-Control-Allow-Method']='*'
+        environ.headers['Access-Control-Allow-Headers']='x-requested-with,content-type'
+        return environ
 
 if __name__ == '__main__':
     app = create_app()
