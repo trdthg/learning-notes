@@ -67,6 +67,30 @@ def excerpt(user_id):
     except:
         return { 'code': 0, 'msg': '新建摘记失败' }
 
+@sentence.route('/get_some_sentence',methods=["GET"])
+@is_login
+def get_some_sentence(user_id):
+    try: 
+        res = SQLHelper.fetch_all('''
+            SELECT *
+            FROM sentence
+            ORDER BY RAND() LIMIT 5''', ())
+        return {'code': 1, 'list': res}
+    except:
+        return { 'code': 0, 'msg': '获取划线句子失败' }
+
+@sentence.route('/get_some_sentence_and_comment',methods=["GET"])
+@is_login
+def get_some_sentence(user_id):
+    try: 
+        res = SQLHelper.fetch_all('''
+            SELECT sentence, article_id
+            FROM sentence
+            ORDER BY RAND() LIMIT 5''', ())
+        return {'code': 1, 'list': res}
+    except:
+        return { 'code': 0, 'msg': '获取划线句子失败' }
+
 
 
 

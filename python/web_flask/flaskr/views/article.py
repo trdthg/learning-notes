@@ -101,6 +101,26 @@ def get_article(user_id):
     except:
         return { 'code': 0, 'msg': '获取评论失败' }
 
+@article.route('/insert',methods=["POST"])
+@is_login
+def insert_article(user_id):
+    try: 
+        create_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) 
+        title = request.get_json()["title"]
+        summary = request.get_json().get("summary", None)
+        content = request.get_json()["content"]
+        author = request.get_json()["author"]
+        link = request.get_json()["link"]
+        category = request.get_json()["category"]
+        res = SQLHelper().insert('''
+            INSERT INTO article(title, summary, content, author, link, create_time, category) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s)''', (
+            title, summary, content, author, link, create_time, category))
+        return {'code': 1}
+    except:
+        return { 'code': 0, 'msg': '获取评论失败' }
+
+
 @article.route('/get_sentence_comment',methods=["GET"])
 @is_login
 def get_sentence_comment(user_id):

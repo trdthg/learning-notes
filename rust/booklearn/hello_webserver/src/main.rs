@@ -27,6 +27,7 @@ fn main() {
     println!("----------server started in {}:{}----------", host, port);
     // take(2) 能限制接受的请求数
     for stream in listener.incoming().take(20) {
+        println!("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         let stream = stream.unwrap();
         pool.execute(|| {
             handle_connection(stream);
@@ -57,31 +58,45 @@ fn handle_connection(mut stream: TcpStream) {
     }
 
     // method, url
-    let head_vec: Vec<&str> = head[0].split(" ").collect();
+    let head_vec: Vec<&str> = head[0].split(' ').collect();
     let (method, url) = (head_vec[0], head_vec[1]);
-    let url_vec: Vec<&str> = url.split("?").collect();
+    let url_vec: Vec<&str> = url.split('?').collect();
     let url = url_vec[0];
-    let params: Vec<&str> = url_vec[1].split("&").collect();
-    let mut args: HashMap<String, String> = HashMap::new();
-    // args
-    for param in params.iter() {
-        let a: Vec<&str> = param.split("=").collect();
-        args.insert(a[0].to_string(), a[1].to_string());
-    }
-    if let Some(content_type) = headers.get("Content-Type") {
-        if content_type == "application/json" {
-            let body: &str = display_vec[1];
-            let body_ = serde_json::from_str::<Test>(&body).unwrap();
-            serde_json::from_str::<Value>(&body).unwrap();
 
-        } else if content_type == "" {
-            let form: Vec<&str> = display_vec[1..].to_vec();
-            for row in form {
+    let mut args: Option<HashMap<String, String>> = None;
+    if url_vec.len() > 1 && url_vec[1] != "" {
+        args = Some(str_to_hashmap(url_vec[1]));
+    }
+    let mut body: Option<serde_json::Value> = None;
+    let mut form: Option<HashMap<String, String>> = None;
+    if let Some(content_type) = headers.get("Content-Type") {
+        if content_type == r"application/x-www-form-urlencoded" {
+            println!(r"--- application/x-www-form-urlencoded ---");
+            let info: &str = display_vec[1];
+            form = Some(str_to_hashmap(info));
+        } else if content_type == "application/json" {
+            println!(r"--- application/json ---");
+            let info: &str = display_vec[1];
+            body = match serde_json::from_str::<Value>(&info) {
+                Ok(map) => Some(map),
+                Err(err) => None
+            };
+            // body = match serde_json::from_str::<Test>(&info){
+            //     Ok(map) => Some(map),
+            //     Err(err) => None
+            // };
+        } else if content_type.starts_with(r"multipart\form-data") {
+            // 涉及到图片上传, 缓冲区大小一定要足够才行
+            println!(r"--- multipart\form-data ---");
+            let info: Vec<&str> = display_vec[1..].to_vec();
+            println!("{:?}", info);
+            for row in info {
                 let infos: Vec<&str> = row.split("\r\n").collect();
                 let entrys = infos[2];
             }
-        }
+        } 
     }
+    println!("1. {:?}\n2. {:?}\n3. {:?}\n", args, form, body);
 
 
 
@@ -103,4 +118,15 @@ fn handle_connection(mut stream: TcpStream) {
     stream.write(response.as_bytes()).unwrap();
     // flush 会等待并阻塞程序执行直到所有字节都被写入连接中；TcpStream 包含一个内部缓冲区来最小化对底层操作系统的调用。
     stream.flush().unwrap();
+}
+
+fn str_to_hashmap(string: &str) -> HashMap<String, String> {
+    let params: Vec<&str> = string.split('&').collect();
+    let mut args: HashMap<String, String> = HashMap::new();
+    // args
+    for param in params.iter() {
+        let a: Vec<&str> = param.split('=').collect();
+        args.insert(a[0].to_string(), a[1].to_string());
+    }
+    args
 }

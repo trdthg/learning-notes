@@ -1,16 +1,28 @@
 # 接口文档(/▽＼)
 
 ## 注意事项
-1. 大多数请求需要在header中添加token
+1. 带有
+    `"header": {
+        "Authorization": "token",
+    }`的需要登录
 2. 请求时不用加id是从token中解码得到
 3. 有√的是暂时完成的
 4. (new)表示新加的接口
 
+## 需求分析
+
 ## 更新记录
-8.19 12:37
-- √ (new)获取文章中所有 被划线句子及评论
-- √ 获取杂志列表(不带content)
-- √ 获取文章
+
+
+8.20
+- 调整了下排序
+- √ (new)插入文章
+- √ (new)获取5条被画线的句子
+
+8.19
+- (new)获取文章中所有 被划线句子及评论(需要改进)
+- √ 获取杂志(文章列表)(20条)
+- √ 获取文章(根据id)
 
 ## 个人
 
@@ -231,6 +243,8 @@
 }
 ```
 
+###
+
 ## 新注册
 
 ### 获取分类标签
@@ -287,12 +301,78 @@
 
 ## 发现
 
-### 作者社区
-无[dog]
+### √ (new)获取5条被画线的句子
+1. req
+```json
+{
+    "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/sentence_get_some_sentence",
+    "method": "post",
+    "header": {
+        "Authorization": "token",
+    },
+}
+```
+2. res
+```json
+{
+    "code": 1,
+    "list": [
+        {
+            "article_id": 1,
+            "id": 5,
+            "sentence": "文章中的某个句子"
+        },
+        {
+            "article_id": 1,
+            "id": 3,
+            "sentence": "文章中的某个句子"
+        },
+        {
+            "article_id": 1,
+            "id": 7,
+            "sentence": "文章中的某个句子"
+        }
+    ]
+}
+```
+
+### √ 获取一条划线句子的所有评论
+1. req
+```json
+{
+    "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/sentence_get_comment",
+    "method": "get",
+    "header": {
+        "Authorization": "token",
+    },
+    "params": {
+        "sentence_id": 1,
+    }
+}
+```
+2. res
+```json
+{
+    "code": 1,
+    "list": [
+        {
+            "comment": "评论",
+            "create_time": "Sat, 14 Aug 2021 15:33:38 GMT",
+            "father_id": 1,
+            "user_id": 2,
+            "username": "1"
+        }
+    ]
+}
+```
+
+
+
+###
 
 ## 杂志
 
-### √ (new)获取杂志列表(不带content)
+### √ (new)获取杂志(文章列表)(20条)
 1. req
 ```json
 {
@@ -308,7 +388,6 @@
 ```
 2. res
 ```json
-// 随机推20个现在是
 {
     "code": 1,
     "list": [
@@ -321,6 +400,95 @@
             "title": "aaa"
         }
     ]
+}
+```
+
+###
+
+## 文章
+
+### √ 加入待读
+1. req
+```json
+{
+    "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/article_toberead",
+    "method": "get",
+    "header": {
+        "Authorization": "token",
+    },
+    "params": {
+        "article_id": 1
+    }
+}
+```
+2. res
+```json
+{
+    "code": 1,
+}
+```
+
+### √ 新建摘记
+```json
+{
+    "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/sentence_excerpt",
+    "method": "get",
+    "header": {
+        "Authorization": "token",
+    },
+    "body": {
+        "article_id": 1,
+        "sentence": "摘录的原句",
+        "comment": "笔记"
+    }
+}
+```
+2. res
+```json
+{
+    "code": 1,
+}
+```
+
+### √ 加入足迹
+1. req
+```json
+{
+    "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/article_history",
+    "method": "get",
+    "header": {
+        "Authorization": "token",
+    },
+    "params": {
+        "article_id": 1
+    }
+}
+```
+2. res
+```json
+{
+    "code": 1,
+}
+```
+
+### √ 加入收藏
+1. req
+```json
+{
+    "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/article_favorite",
+    "method": "get",
+    "header": {
+        "Authorization": "token",
+    },
+    "params": {
+        "article_id": 1
+    }
+}
+```
+2. res
+```json
+{
+    "code": 1,
 }
 ```
 
@@ -357,6 +525,31 @@
     ]
 }
 ```
+
+### √ (new)插入文章
+1. req
+```json
+{
+    "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/article_insert",
+    "method": "post",
+    "body": {
+        "title": "title",
+        "summary": "summary",
+        "content": "content",
+        "author": "author",
+        "link": "link",
+        "category": "category"
+    }
+}
+```
+2. res
+```json
+{
+    "code": 1,
+}
+```
+
+###  
 
 ## 评论
 
@@ -495,89 +688,9 @@
 }
 ```
 
-### √ 加入待读
-1. req
-```json
-{
-    "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/article_toberead",
-    "method": "get",
-    "header": {
-        "Authorization": "token",
-    },
-    "params": {
-        "article_id": 1
-    }
-}
-```
-2. res
-```json
-{
-    "code": 1,
-}
-```
-
-### √ 新建摘记
-```json
-{
-    "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/sentence_excerpt",
-    "method": "get",
-    "header": {
-        "Authorization": "token",
-    },
-    "body": {
-        "article_id": 1,
-        "sentence": "摘录的原句",
-        "comment": "笔记"
-    }
-}
-```
-2. res
-```json
-{
-    "code": 1,
-}
-```
-
-### √ 加入足迹
-1. req
-```json
-{
-    "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/article_history",
-    "method": "get",
-    "header": {
-        "Authorization": "token",
-    },
-    "params": {
-        "article_id": 1
-    }
-}
-```
-2. res
-```json
-{
-    "code": 1,
-}
-```
-
-### √ 加入收藏
-1. req
-```json
-{
-    "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/article_favorite",
-    "method": "get",
-    "header": {
-        "Authorization": "token",
-    },
-    "params": {
-        "article_id": 1
-    }
-}
-```
-2. res
-```json
-{
-    "code": 1,
-}
-```
+###
 
 ## 其他
+
+
+## --- end ---
