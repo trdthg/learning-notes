@@ -8,11 +8,24 @@
 2. 请求时不用加id是从token中解码得到
 3. 有√的是暂时完成的
 4. (new)表示新加的接口
+5. body -> application/json, param -> 路由参数, form -> application/x-www-form-urlencoded
+6. 现在的url这么长是因为腾讯云上的代码和我本地的不一样
 
 ## 需求分析
+关于画线评论:
+用户可以在
+
+## 聊天吹水
+Q: 获取杂志(文章列表)时需要content(全文)吗?
 
 ## 更新记录
 
+
+8.21
+- 不需要用户自己id的现在都不用传token
+- get_userinfo拆成两个, get_userinfo传user_id不用登陆, get_selfinfo不传user_id用登陆
+- √ (new)评论别人划线的句子
+- 拯救了头像上传获取, 不过文件到底被传到了那个文件夹我看不到就离谱
 
 8.20
 - 调整了下排序
@@ -73,7 +86,7 @@
 1. req
 ```json
 {
-    "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/account_get_userinfo",
+    "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/account_get_selfinfo",
     "method": "get",
     "header": {
         "Authorization": "token",
@@ -85,12 +98,36 @@
 {
     "code": 1,
     "userinfo": {
-        "avatar": "avatar_2_xrfuO61aqbTrR8ilkk.jpg",
-        "email": "1@qq.com",
-        "username": "1"
+        "avatar": "/test/uploads/avatar_3_9Cv6UijahTEEpx97AY.png",
+        "email": "2@qq.com",
+        "username": "2"
     }
 }
 ```
+
+### √ (new)获取用户资料
+1. req
+```json
+{
+    "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/account_get_selfinfo",
+    "method": "get",
+    "params": {
+        "user_id": 1
+    }
+}
+```
+2. res
+```json
+{
+    "code": 1,
+    "userinfo": {
+        "avatar": "/test/uploads/avatar_3_9Cv6UijahTEEpx97AY.png",
+        "email": "2@qq.com",
+        "username": "2"
+    }
+}
+```
+
 
 ### √ 上传头像
 1. req
@@ -113,7 +150,7 @@
 }
 ```
 
-### √ 获取头像
+### √ 获取用户头像(get_userinfo即可实现同样的功能)
 1. req
 ```json
 {
@@ -127,8 +164,8 @@
 2. res
 ```json
 {
-    "code": "1",
-    "avatar_url": "/static/avatar/avatar_2_xrfuO61aqbTrR8ilkk.jpg"
+    "avatar_url": "/test/uploads/avatar_3_9Cv6UijahTEEpx97AY.png",
+    "code": 1
 }
 ```
 
@@ -307,9 +344,6 @@
 {
     "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/sentence_get_some_sentence",
     "method": "post",
-    "header": {
-        "Authorization": "token",
-    },
 }
 ```
 2. res
@@ -342,9 +376,6 @@
 {
     "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/sentence_get_comment",
     "method": "get",
-    "header": {
-        "Authorization": "token",
-    },
     "params": {
         "sentence_id": 1,
     }
@@ -368,6 +399,30 @@
 
 
 
+
+### √ (new)评论一条被划线句子
+1. req
+```json
+{
+    "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/sentence_comment",
+    "method": "post",
+    "header": {
+        "Authorization": "token",
+    },
+    "body": {
+        "sentence_id": 1,
+        "comment": "评论",
+    }
+}
+```
+2. res
+```json
+{
+    "code": 1,
+}
+```
+
+
 ###
 
 ## 杂志
@@ -378,9 +433,6 @@
 {
     "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/megazine_get_summarys",
     "method": "get",
-    "header": {
-        "Authorization": "token",
-    },
     "params": {
         "category": "文化"
     }
@@ -499,9 +551,6 @@
 {
     "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/article_get_article",
     "method": "get",
-    "header": {
-        "Authorization": "token",
-    },
     "params": {
         "article_id": 1
     }
@@ -530,7 +579,7 @@
 1. req
 ```json
 {
-    "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/article_insert",
+    "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/article_insert_article",
     "method": "post",
     "body": {
         "title": "title",
@@ -581,9 +630,6 @@
 {
     "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/article_get_comment",
     "method": "get",
-    "header": {
-        "Authorization": "token",
-    },
     "params": {
         "sarticle_id": 1,
     }
@@ -604,15 +650,12 @@
 }
 ```
 
-### √ (new)获取文章中所有 被划线句子及评论
+### (new)获取文章中所有 被划线句子及评论
 1. req
 ```json
 {
     "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/article_get_sentence_comment",
     "method": "get",
-    "header": {
-        "Authorization": "token",
-    },
     "params": {
         "article_id": 1,
     }
@@ -634,7 +677,7 @@
 }
 ```
 
-### √ 画线评论句子 
+### √ 画线评论句子
 1. req
 ```json
 {
@@ -664,9 +707,6 @@
 {
     "url":  "https://service-1v7iyl73-1306147581.bj.apigw.tencentcs.com/test/sentence_get_comment",
     "method": "get",
-    "header": {
-        "Authorization": "token",
-    },
     "params": {
         "sentence_id": 1,
     }
@@ -691,6 +731,11 @@
 ###
 
 ## 其他
+
+### 获取头像
+获取到的头像url其实也是一个api, restful风格的, /uploads/{filename}
+
+###
 
 
 ## --- end ---

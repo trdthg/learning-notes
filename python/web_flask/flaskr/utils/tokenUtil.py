@@ -46,8 +46,9 @@ class TokenHelper(object):
             return {'error':'Signature verification failed'}
 
 if __name__ == "__main__":
-    a = TokenHelper().encrpyt_token("username")
-    print(a)
+    # a = TokenHelper().encrpyt_token("username")
+    a = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJpc3N1ZSBieSBjbGFzcyBUb2tlbiIsInN1YiI6InN1YiBmb3IgYWxsIHVzZXIgd2hlbiB0cnlpbmcgdG8gbG9naW4iLCJpYXQiOjE2Mjk1NDAzMjEuODA4NDQ4MywidXNlcm5hbWUiOiIxIiwiZXhwIjoxNjI5NTQyMTIxLjQzMjU1NTR9._gQ0fOlqhM-NzV_Ca3T5eyOtFedbwdApm-OkYr5y3Aw"
+    # print(a)
     a = TokenHelper().decrypt_token(a)
     print(a)
     

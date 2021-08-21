@@ -71,8 +71,7 @@ def comment(user_id):
         return { 'code': 0, 'msg': '评论失败' }
 
 @article.route('/get_comment',methods=["GET"])
-@is_login
-def get_comment(user_id):
+def get_comment():
     try: 
         article_id = request.args["article_id"]
         res = SQLHelper().fetch_all('''

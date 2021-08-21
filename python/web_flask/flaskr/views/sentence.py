@@ -35,9 +35,25 @@ def comment(user_id):
     except:
         return { 'code': 0, 'msg': '评论失败' }
 
-@sentence.route('/get_comment',methods=["GET"])
+@sentence.route('/comment2',methods=["POST"])
 @is_login
-def get_comment(user_id):
+def comment2(user_id):
+    try: 
+        nowtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) 
+        sentence_id = request.get_json()["sentence_id"]
+        comment = request.get_json()["comment"]
+        father_id = request.get_json().get('father_id', 0)
+        res = SQLHelper().insert('''
+            INSERT INTO comment_sentence(user_id, comment, sentence_id, father_id, create_time) 
+            VALUES (%s, %s, %s, %s, %s)''', (
+            user_id, comment, sentence_id, father_id, nowtime))
+        return {'code': 1}
+    except:
+        return { 'code': 0, 'msg': '评论失败' }
+
+
+@sentence.route('/get_comment',methods=["GET"])
+def get_comment():
     try: 
         sentence_id = request.args["sentence_id"]
         res = SQLHelper().fetch_all('''
@@ -68,11 +84,10 @@ def excerpt(user_id):
         return { 'code': 0, 'msg': '新建摘记失败' }
 
 @sentence.route('/get_some_sentence',methods=["GET"])
-@is_login
-def get_some_sentence(user_id):
+def get_some_sentence():
     try: 
         res = SQLHelper.fetch_all('''
-            SELECT *
+            SELECT id, sentence, article_id
             FROM sentence
             ORDER BY RAND() LIMIT 5''', ())
         return {'code': 1, 'list': res}
@@ -80,8 +95,7 @@ def get_some_sentence(user_id):
         return { 'code': 0, 'msg': '获取划线句子失败' }
 
 @sentence.route('/get_some_sentence_and_comment',methods=["GET"])
-@is_login
-def get_some_sentence(user_id):
+def get_some_sentence_and_comment():
     try: 
         res = SQLHelper.fetch_all('''
             SELECT sentence, article_id

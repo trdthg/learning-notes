@@ -15,6 +15,7 @@ account = Blueprint('account', __name__, url_prefix='/account')
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'JPG', 'PNG', 'bmp'])
 def allowed_file(filename):
+    print(filename.rsplit('.', 1))
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 # 未登录
@@ -71,23 +72,49 @@ def get_userinfo(user_id):
 def upload_avatar(user_id):
     try:
         if 'avatar' not in request.files:
-            return {"code": 0, "msg": "没有文件"}
+            return jsonify({"code": 0, "msg": "没有文件"})
         file = request.files['avatar']
-        if file and allowed_file(file.filename):
+        if allowed_file(file.filename):
             if file.filename == '':
-                return {"code": 0, "msg": "没有文件名"}
+                return jsonify({"code": 0, "msg": "没有文件名"})
             # 原文件名
             filename = secure_filename(file.filename)
             # 新的随机文件名
             filename = "avatar_" + str(user_id) + '_' + generate(size=18) + '.' + filename.split(".")[-1]
-            # 文件名存储
-            SQLHelper().update('''update user set avatar =  %s where id = %s''', (filename, user_id))
+            try:
+                # 文件名存储
+                SQLHelper().update('''update user set avatar =  %s where id = %s''', (filename, user_id))
+            except:
+                return jsonify({"code": 0, "msg": "数据库保存错误"})
             # 文件存储
-            file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
-            return {"code": 1}
-        return {"code": 0, "msg": "不允许上传"}
+            try:
+                # file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
+                file.save(os.path.join(filename))
+                return jsonify({"code": 1})
+            except:
+                return jsonify({"code": 0, "msg": "文件保存错误"})
+        return jsonify({"code": 0, "msg": "不允许上传该类型", "isAllowed": allowed_file(file.filename)})
     except:
-        return {"code": 0, "msg": "文件上传失败"}
+        return jsonify({"code": 0, "msg": "文件上传失败"})
+    # try:
+    #     if 'avatar' not in request.files:
+    #         return {"code": 0, "msg": "没有文件"}
+    #     file = request.files['avatar']
+    #     if file and allowed_file(file.filename):
+    #         if file.filename == '':
+    #             return {"code": 0, "msg": "没有文件名"}
+    #         # 原文件名
+    #         filename = secure_filename(file.filename)
+    #         # 新的随机文件名
+    #         filename = "avatar_" + str(user_id) + '_' + generate(size=18) + '.' + filename.split(".")[-1]
+    #         # 文件名存储
+    #         SQLHelper().update('''update user set avatar =  %s where id = %s''', (filename, user_id))
+    #         # 文件存储
+    #         file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
+    #         return {"code": 1}
+    #     return {"code": 0, "msg": "不允许上传"}
+    # except:
+    #     return {"code": 0, "msg": "文件上传失败"}
 
 @account.route('/get_avatar', methods=['GET'])
 @is_login
