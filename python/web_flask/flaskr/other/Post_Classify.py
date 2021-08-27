@@ -51,19 +51,19 @@ def Cos_Comparer(result, vectors, dictionary): # 通过比较两个向量的cos�
         temp_v = v[1][1:-1].split(',') # 取每类文章的平均向量
         temp_f_v = list(map(float, temp_v)) # 字符串转数的集合
         num_cos = cosine_similarity(vector, temp_f_v) # 计算未分类文章和每类文章的平均向量的相关度
-        cos = (v[0], num_cos) # 格式 ('科技', 9.8)
+        cos = (num_cos, v[0]) # 格式 ('科技', 9.8)
         if (len(topK) < 3): # 只保留前三个数据, 此时集合中少于三个元素
             topK.append(cos) # 加入 topK 当中
             topK.sort(reverse = True) # 从大到小排序
         else: # 集合中多于三个元素
-            if (cos[1] > topK[0][1]): # 如果现在这个余弦夹角比 topK 中的最大值还大，即更加相关，则插入到头部
+            if (cos[0] > topK[0][0]): # 如果现在这个余弦夹角比 topK 中的最大值还大，即更加相关，则插入到头部
                 tmp = topK[1]
                 topK[1] = topK[0]
                 topK[0] = cos
                 topK[2] = tmp
  
     print('post', post_id, ':', topK)
-    sql = "update article set category = '{top}' where id = {post_id}".format(top = topK[0][0], post_id = post_id)
+    sql = "update article set category = '{top}' where id = {post_id}".format(top = topK[0][1], post_id = post_id)
     # print(sql)
     cur.execute(sql)
     mysql.commit()

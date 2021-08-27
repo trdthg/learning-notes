@@ -24,6 +24,8 @@ def login():
     try: 
         info = request.get_json()
         user_id = SQLHelper().fetch_one("select id from user where username = %s and password = %s", (info['username'], info['password']))
+        print(user_id)
+        print(user_id['id'])
         if user_id:
             username = info['username']
             session[username] = user_id

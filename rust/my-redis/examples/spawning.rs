@@ -1,13 +1,12 @@
+use std::io::Result;
 use tokio::net::{TcpListener, TcpStream};
-
 #[tokio::main]
-async fn main() {
+pub async fn main() -> Result<()> {
     let listener = TcpListener::bind(("127.0.0.1", 6379)).await.unwrap();
     println!("started listener on 127.0.0.1:6379");
     loop {
         let (socket, addr) = listener.accept().await.unwrap();
         println!("{}", addr);
-`3
         // A new task is spawned for each inbound socket. The socket is moved to the new task and processed there.
         tokio::spawn(async move {
             handle_connection(socket).await;
@@ -16,7 +15,7 @@ async fn main() {
 }
 
 async fn handle_connection(socket: TcpStream) {
-    use mini_redis::{Connection, Frame, Command };
+    use mini_redis::{Command, Connection, Frame};
     use std::collections::HashMap;
 
     // A hashmap is used to store data
@@ -42,7 +41,6 @@ async fn handle_connection(socket: TcpStream) {
             }
             cmd => panic!("unimplemented {:?}", cmd),
         };
-        
 
         // let response = Frame::Error("unimplemented".to_string());
         // write the response to the client
