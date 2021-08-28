@@ -27,7 +27,7 @@ fn main() {
     println!("----------server started in {}:{}----------", host, port);
     // take(2) 能限制接受的请求数
     for stream in listener.incoming().take(20) {
-        println!("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        println!("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         let stream = stream.unwrap();
         pool.execute(|| {
             handle_connection(stream);
@@ -106,15 +106,22 @@ fn handle_connection(mut stream: TcpStream) {
     let sleep = b"GET /sleep HTTP/1.1\r\n";
 
     let (status_line, filename) = if buffer.starts_with(get) {
-        ("HTTP/1.1 200 OK\r\n\r\n", "hello.html")
+        ("HTTP/1.1 200 OK\r\n", "hello.html")
     } else if buffer.starts_with(sleep) {
         thread::sleep(Duration::from_secs(5));
-        ("HTTP/1.1 200 OK\r\n\r\n", "hello.html")
+        ("HTTP/1.1 200 OK\r\n", "hello.html")
     } else {
-        ("HTTP/1.1 404 NOT FOUND\r\n\r\n", "404.html")
+        // ("HTTP/1.1 404 NOT FOUND\r\nContent:sssss\r\n{}\r\n\r\n", "404.html", body)
+        let body = r#"Test { body1: 1, body2: "sssss".to_string()}"#;
+        ("HTTP/1.1 404 NOT FOUND\r\n", "404.html")
     };
+    let headers = r#"
+        {
+            Content-Length: 34 
+        }
+    "#;
     let contents = fs::read_to_string(filename).unwrap();
-    let response = format!("{}{}", status_line, contents);
+    let response = format!("{}{}{}", status_line, headers, contents);
     stream.write(response.as_bytes()).unwrap();
     // flush 会等待并阻塞程序执行直到所有字节都被写入连接中；TcpStream 包含一个内部缓冲区来最小化对底层操作系统的调用。
     stream.flush().unwrap();
