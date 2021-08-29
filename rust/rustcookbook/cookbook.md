@@ -1,0 +1,7 @@
+# RUST COOKBOOK
+
+## algorithms
+
+### rand
+
+#### 
