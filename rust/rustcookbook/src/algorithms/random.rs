@@ -114,13 +114,13 @@ pub mod test {
     use super::*;
     #[test]
     fn rand() {
-        generate_random();
-        generate_random_with_range();
-        uniform_range();
-        special_range();
-        genreate_for_struct();
-        generate_random_string();
-        generate_random_string_from_string();
+        // generate_random();
+        // generate_random_with_range();
+        // uniform_range();
+        // special_range();
+        // genreate_for_struct();
+        // generate_random_string();
+        // generate_random_string_from_string();
     }
 
     #[test]
