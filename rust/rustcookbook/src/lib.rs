@@ -7,6 +7,7 @@ pub mod datastructures;
 pub mod database;
 pub mod datetime;
 pub mod debugging;
+pub mod encoding;
 
 #[cfg(test)]
 pub mod test {
