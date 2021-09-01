@@ -1,4 +1,3 @@
-
 use data_encoding::HEXUPPER;
 use ring::error::Unspecified;
 use ring::rand::SecureRandom;
@@ -46,7 +45,6 @@ pub fn pbkdf2_test() -> Result<(), Unspecified> {
 
     Ok(())
 }
-
 
 #[cfg(test)]
 pub mod test {

@@ -33,26 +33,34 @@ pub fn insert_db() -> Result<()> {
     cat_colors.insert(String::from("Blue"), vec!["Tigger", "Summy"]);
     cat_colors.insert(String::from("Black"), vec!["Oreo", "Biscuit"]);
     for (color, cat_names) in cat_colors {
-        conn.execute("
+        conn.execute(
+            "
             insert into cat_colors (name) values (?1)
-        ", [&color])?;
+        ",
+            [&color],
+        )?;
         let last_id = conn.last_insert_rowid().to_string();
         for cat_name in cat_names {
-            conn.execute("
+            conn.execute(
+                "
                 insert into cats (name, color_id) values (?1, ?2)
-            ", [&cat_name, &last_id.as_str()])?;
+            ",
+                [&cat_name, &last_id.as_str()],
+            )?;
         }
     }
 
-    let mut stmt = conn.prepare("
+    let mut stmt = conn.prepare(
+        "
         SELECT c.name, cc.name
         FROM cats c INNER JOIN cat_colors cc
         WHERE cc.id = c.color_id
-    ")?;
+    ",
+    )?;
     let cats = stmt.query_map([], |row| {
-        Ok(Cat {  
+        Ok(Cat {
             name: row.get(0)?,
-            color: row.get(1)?
+            color: row.get(1)?,
         })
     })?;
 

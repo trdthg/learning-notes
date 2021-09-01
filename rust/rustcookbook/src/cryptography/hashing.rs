@@ -9,8 +9,8 @@ error_chain! {
 pub fn get_SHA256() -> Result<()> {
     let path = "xxx.log";
     std::fs::write(path, "some sentenses")?;
-    use std::fs::{File};
-    use std::io::{Read, BufReader};
+    use std::fs::File;
+    use std::io::{BufReader, Read};
     let mut reader = BufReader::new(File::open(path)?);
     use ring::digest::{Context, Digest, SHA256};
     let mut context = Context::new(&SHA256);
@@ -45,17 +45,7 @@ pub fn get_hmac_signature() {
     println!("{:?}", signature);
     // 校验
     hmac::verify(&key, message.as_bytes(), signature.as_ref()).unwrap();
-    
 }
-
-
-
-
-
-
-
-
-
 
 #[cfg(test)]
 pub mod test {
@@ -64,6 +54,5 @@ pub mod test {
     fn test() {
         // get_SHA256();
         get_hmac_signature();
-
     }
 }

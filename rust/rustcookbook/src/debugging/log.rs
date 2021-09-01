@@ -7,9 +7,7 @@ pub fn output_log() {
     log::error!("{}", "this is a log msg on staout");
 
     use env_logger::{Builder, Target};
-    Builder::new()
-        .target(Target::Stdout)
-        .init();
+    Builder::new().target(Target::Stdout).init();
     log::debug!("ssssssss");
 }
 
@@ -18,10 +16,14 @@ pub fn customed_logger() {
 
     struct ConsoleLogger;
     impl log::Log for ConsoleLogger {
-
         // Determines if a log message with the specified metadata would be logged.
         fn enabled(&self, metadata: &Metadata) -> bool {
-            println!("{} ? {} => {}", metadata.level(), Level::Info, metadata.level() <= Level::Info);
+            println!(
+                "{} ? {} => {}",
+                metadata.level(),
+                Level::Info,
+                metadata.level() <= Level::Info
+            );
             metadata.level() <= Level::Info
         }
         // Logs the `Record`.
@@ -32,7 +34,6 @@ pub fn customed_logger() {
         }
         // Flushes any buffered records.
         fn flush(&self) {}
-
     }
 
     static CONSOLE_LOGGER: ConsoleLogger = ConsoleLogger;
@@ -43,16 +44,14 @@ pub fn customed_logger() {
     log::error!("error");
     log::info!("info");
     log::trace!("trace");
-
 }
-
 
 pub fn log_to_sys() {
     // use syslog::
 }
 
 pub fn customed_env() {
-    use env_logger::{Builder};
+    use env_logger::Builder;
     use std::env;
 
     Builder::new()
@@ -86,8 +85,8 @@ error_chain! {
 pub fn customed_log_path() -> Result<()> {
     use log::LevelFilter;
     use log4rs::append::file::FileAppender;
-    use log4rs::encode::pattern::PatternEncoder;
     use log4rs::config::{Appender, Config, Root};
+    use log4rs::encode::pattern::PatternEncoder;
 
     let logfile = FileAppender::builder()
         .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
@@ -95,9 +94,7 @@ pub fn customed_log_path() -> Result<()> {
 
     let config = Config::builder()
         .appender(Appender::builder().build("logfile", Box::new(logfile)))
-        .build(Root::builder()
-                   .appender("logfile")
-                   .build(LevelFilter::Info))?;
+        .build(Root::builder().appender("logfile").build(LevelFilter::Info))?;
 
     log4rs::init_config(config)?;
 
@@ -110,7 +107,6 @@ pub fn customed_log_path() -> Result<()> {
 
     Ok(())
 }
-
 
 #[test]
 fn test() {

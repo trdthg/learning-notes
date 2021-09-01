@@ -1,4 +1,3 @@
-
 pub fn bit_test() {
     use bitflags::bitflags;
 
@@ -27,9 +26,7 @@ pub fn bit_test() {
     let mut flags = MyFlags::FLAG_ABC;
     println!("{}", flags);
     println!("{}", flags.clear());
-
 }
-
 
 #[cfg(test)]
 pub mod test {

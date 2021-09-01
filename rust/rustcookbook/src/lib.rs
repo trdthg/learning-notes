@@ -3,11 +3,14 @@ pub mod cmd;
 pub mod compressing;
 pub mod concurrency;
 pub mod cryptography;
-pub mod datastructures;
 pub mod database;
+pub mod datastructures;
 pub mod datetime;
 pub mod debugging;
 pub mod encoding;
+pub mod filesystem;
+pub mod operatingsystem;
+pub mod webprogramming;
 
 #[cfg(test)]
 pub mod test {

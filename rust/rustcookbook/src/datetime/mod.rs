@@ -1,4 +1,3 @@
-
 pub fn get_interval() {
     use std::time;
 
@@ -14,11 +13,12 @@ pub fn get_sometimes_later() {
     fn day_earlier(date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
         date_time.checked_add_signed(Duration::days(1))
     }
-    let almost_three_weeks_later = now.checked_add_signed(Duration::weeks(2))
+    let almost_three_weeks_later = now
+        .checked_add_signed(Duration::weeks(2))
         .and_then(|in_2weeks| in_2weeks.checked_add_signed(Duration::weeks(1)))
         .and_then(day_earlier);
     match almost_three_weeks_later {
-        Some(x) => println!("{}", x),
+        Some(x) => println!("now: {}\nthree weeks later: {}", now, x),
         None => eprintln!("Almost three weeks from now overflows!"),
     }
 
@@ -30,7 +30,7 @@ pub fn get_sometimes_later() {
 }
 
 pub fn local_to_utc() {
-    use chrono::{Local, Utc, DateTime, FixedOffset};
+    use chrono::{DateTime, FixedOffset, Local, Utc};
     let local_time = Local::now();
     let utc_time = DateTime::<Utc>::from(local_time);
     println!("{}   {}", local_time, utc_time);
@@ -44,7 +44,7 @@ pub fn local_to_utc() {
 }
 
 pub fn get_timeinfo() {
-    use chrono::{Timelike, Datelike, Utc};
+    use chrono::{Datelike, Timelike, Utc};
     let now = Utc::now();
     let (is_pm, hour) = now.hour12();
     println!(
@@ -76,28 +76,37 @@ pub fn get_timeinfo() {
 pub fn datetime_to_timestamp() {
     use chrono::{NaiveDate, NaiveDateTime};
     let date_time: NaiveDateTime = NaiveDate::from_ymd(2017, 11, 12).and_hms(17, 33, 44);
-    println!("
-        Number of seconds between 1970-01-01 00:00:00 and {} is {}.", 
-        date_time, date_time.timestamp());
+    println!(
+        "
+        Number of seconds between 1970-01-01 00:00:00 and {} is {}.",
+        date_time,
+        date_time.timestamp()
+    );
     let date_time: NaiveDateTime = NaiveDateTime::from_timestamp(1_000_000_000, 0);
-    println!("
-        Date after {} seconds since 1970-01-01 00:00:00 was {} .", 
-        date_time.timestamp(), date_time);
+    println!(
+        "
+        Date after {} seconds since 1970-01-01 00:00:00 was {} .",
+        date_time.timestamp(),
+        date_time
+    );
 }
 
 pub fn format_display() {
-    use chrono::{Utc};
-    
+    use chrono::Utc;
+
     let now = Utc::now();
     println!("UTC now is: {}", now);
     println!("UTC now in RFC 2822 is: {}", now.to_rfc2822());
     println!("UTC now in RFC 3339 is: {}", now.to_rfc3339());
-    println!("UTC now in a custom format is: {}", now.format("%a %b %e %T %Y"));
+    println!(
+        "UTC now in a custom format is: {}",
+        now.format("%a %b %e %T %Y")
+    );
 }
 
 use chrono::format::ParseError;
 pub fn parse_time_string_to_struct() -> Result<(), ParseError> {
-    use chrono::{DateTime, NaiveTime, NaiveDate, NaiveDateTime};
+    use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime};
 
     let rfc2822 = DateTime::parse_from_rfc2822("Tue, 1 Jul 2003 10:52:37 +0200")?;
     println!("{}", rfc2822);
@@ -123,10 +132,9 @@ pub fn parse_time_string_to_struct() -> Result<(), ParseError> {
 #[test]
 pub fn test() {
     // get_interval();
-    // get_sometimes_later();
+    get_sometimes_later();
     // local_to_utc();
     // datetime_to_timestamp();
     // format_display();
     // parse_time_string_to_struct();
-
 }
