@@ -25,7 +25,10 @@ struct Node<T> {
 // Basic
 impl<'a, T> List<'a, T> {
     pub fn new() -> List<'a, T> {
-        List { head: None, tail: None }
+        List {
+            head: None,
+            tail: None,
+        }
     }
 
     pub fn push(&'a mut self, elem: T) {

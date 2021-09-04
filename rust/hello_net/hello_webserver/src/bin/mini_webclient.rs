@@ -13,7 +13,7 @@ fn main() {
     client.write(&message.clone().into_bytes()).unwrap();
     client.write(&message.into_bytes()).unwrap();
     let mut buffer = [0; 32];
-    client.read(&mut buffer[..]);   
+    client.read(&mut buffer[..]);
     println!("{}", str::from_utf8(&buffer).unwrap());
 
 }

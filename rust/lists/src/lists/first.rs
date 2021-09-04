@@ -1,6 +1,5 @@
-
 /**
- * title: A Bad Stack 
+ * title: A Bad Stack
  */
 
 /**
@@ -13,7 +12,6 @@
 //     Empty,
 //     Elem(T, Box<List<T>>),
 // }
-
 
 // 2.1. Layout
 #[derive(Debug)]
@@ -36,9 +34,7 @@ struct Node {
 // 2.2. New
 impl List {
     pub fn new() -> Self {
-        List {
-            head: Link::Empty,
-        }
+        List { head: Link::Empty }
     }
 }
 
@@ -52,15 +48,15 @@ impl List {
 use std::mem;
 impl List {
     pub fn push(&mut self, elem: i32) {
-        let new_node = Box::new(Node { 
-            elem, 
-            next: mem::replace(&mut self.head, Link::Empty), 
+        let new_node = Box::new(Node {
+            elem,
+            next: mem::replace(&mut self.head, Link::Empty),
         });
         self.head = Link::More(new_node)
     }
 }
 
-// 2.5. Pop 
+// 2.5. Pop
 
 // 返回 unimplemented!()
 // impl List {
@@ -141,7 +137,6 @@ mod test {
         list.push(1);
         list.push(2);
         list.push(3);
-
     }
 }
 
@@ -164,7 +159,7 @@ impl Drop for Link {
     }
 }
 
-We can't drop the contents of the Box after deallocating, so there's no way to drop in a tail-recursive manner! 
+We can't drop the contents of the Box after deallocating, so there's no way to drop in a tail-recursive manner!
 Instead we're going to have to manually write an iterative drop for List that hoists nodes out of their boxes.
 
 impl Drop for Box<Node> {

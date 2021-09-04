@@ -1,10 +1,10 @@
 /**
  * title: A Persistent Stack
- * 
+ *
  * list1 = A -> B -> C -> D
  * list2 = tail(list1) = B -> C -> D
  * list3 = push(list2, X) = X -> B -> C -> D
- * 
+ *
  * list1 -> A ---+
  *               |
  *               v
@@ -13,11 +13,10 @@
  *               |
  * list3 -> X ---+
  */
-
 use std::rc::Rc;
 // basic -------------------------------------------------------------------
 pub struct List<T> {
-    head: Link<T>
+    head: Link<T>,
 }
 
 type Link<T> = Option<Rc<Node<T>>>;
@@ -32,10 +31,17 @@ impl<T> List<T> {
         List { head: None }
     }
     pub fn prepend(&self, elem: T) -> List<T> {
-        List { head: Some(Rc::new(Node { elem, next: self.head.clone() })) }
+        List {
+            head: Some(Rc::new(Node {
+                elem,
+                next: self.head.clone(),
+            })),
+        }
     }
     pub fn tail(&self) -> List<T> {
-        List { head: self.head.as_ref().and_then(|node| node.next.clone()) }
+        List {
+            head: self.head.as_ref().and_then(|node| node.next.clone()),
+        }
     }
     pub fn head(&self) -> Option<&T> {
         self.head.as_ref().map(|node| &node.elem)
@@ -44,7 +50,7 @@ impl<T> List<T> {
 
 // Iter ------------------------------------------------------------------
 pub struct Iter<'a, T> {
-    next: Option<&'a Node<T>>
+    next: Option<&'a Node<T>>,
 }
 impl<'a, T> Iterator for Iter<'a, T> {
     type Item = &'a T;
@@ -57,7 +63,9 @@ impl<'a, T> Iterator for Iter<'a, T> {
 }
 impl<T> List<T> {
     pub fn iter(&self) -> Iter<T> {
-        Iter { next: self.head.as_ref().map(|node| &**node) }
+        Iter {
+            next: self.head.as_ref().map(|node| &**node),
+        }
     }
 }
 // drop ------------------------------------------------------------
@@ -68,12 +76,11 @@ impl<T> Drop for List<T> {
             if let Ok(mut node) = Rc::try_unwrap(node) {
                 head = node.next.take();
             } else {
-                break
+                break;
             }
         }
     }
 }
-
 
 #[cfg(Test)]
 mod test {
@@ -82,7 +89,7 @@ mod test {
     fn basics_test() {
         let list = List::new();
         list.prepend(1).prepend(2).prepend(3);
-        
+
         assert_eq!(list.head(), Some(&3));
         let list = list.tail();
         assert_eq!(list.head(), Some(&2));
@@ -102,5 +109,4 @@ mod test {
         assert_eq!(iter.next(), Some(&2));
         assert_eq!(iter.next(), Some(&1));
     }
-
 }

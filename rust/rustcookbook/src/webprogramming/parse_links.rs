@@ -31,9 +31,12 @@ use select::document::Document;
 use select::predicate::Name;
 use url::{Position, Url};
 
+// 尝试从base标签获得默认地址, 否则从给定的url中解析出base_url
+// 只包含协议和域名
 async fn get_base_url(url: &Url, doc: &Document) -> Result<Url> {
     let base_tag_href = doc.find(Name("base")).filter_map(|n| n.attr("href")).nth(0);
     let base_url =
+        // base_tag_href.map_or_else(|| Url::parse(&url[..Position::BeforePath]), Url::parse)?;
         base_tag_href.map_or_else(|| Url::parse(&url[..Position::BeforePath]), Url::parse)?;
     Ok(base_url)
 }
@@ -45,9 +48,13 @@ pub async fn check_dead_link(url: &Url) -> Result<bool> {
 
 pub async fn get_all_ok_links() -> Result<()> {
     let url = Url::parse("https://www.rust-lang.org/en-US/")?;
+    println!("url: {}", url);
     let res = reqwest::get(url.as_ref()).await?.text().await?;
     let document: Document = Document::from(res.as_str());
+    let url = Url::parse("https://www.baidu.com")?;
     let base_url = get_base_url(&url, &document).await?;
+    println!("base_url: {}", base_url);
+    println!("+++++++++++++++++++++++++++++++");
     let base_parser = Url::options().base_url(Some(&base_url));
     let links: HashSet<Url> = document
         .find(Name("a"))
