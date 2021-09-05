@@ -1,11 +1,9 @@
 use std::collections::HashMap;
 
-
 use super::token::{self, Token, TokenState, TokenType};
 
 // 兼容更多keyword
 // 区别变量类型
-
 
 #[derive(Clone, Copy)]
 pub enum ParseState {
@@ -38,7 +36,7 @@ pub struct Ope {
 }
 
 impl Parser {
-    pub fn parse(token_stream: Vec<Token>) ->Parser {
+    pub fn parse(token_stream: Vec<Token>) -> Parser {
         let mut method: &str = "";
         let mut table: &str = "";
         let mut map_c: Vec<Ope> = Vec::new();
@@ -80,9 +78,8 @@ impl Parser {
                         parsestate = ParseState::InSet;
                     }
                     _ => {}
-                }
-                
-                
+                },
+
                 TokenType::String => match parsestate {
                     ParseState::InInsert => {
                         let a = 1;
@@ -95,43 +92,51 @@ impl Parser {
                         table = &value;
                     }
                     _ => {}
-                }
+                },
                 TokenType::Operation => match value {
                     "*" => match parsestate {
                         ParseState::InSelect => {}
                         _ => {}
-                    }
+                    },
                     "=" => match parsestate {
-                        ParseState::InWhere => {
-                            match tokentype {
-                                TokenType::Operation => {
-                                    if value == "=" {
-                                        if let (Some(k), Some(v)) = (token_stream.get(i - 1), token_stream.get(i + 1)) {
-                                            map_c.push(Ope{operation: Some("=".to_string()), key: Some(k.value.clone()), value: Some(v.value.clone())});
-                                        }
+                        ParseState::InWhere => match tokentype {
+                            TokenType::Operation => {
+                                if value == "=" {
+                                    if let (Some(k), Some(v)) =
+                                        (token_stream.get(i - 1), token_stream.get(i + 1))
+                                    {
+                                        map_c.push(Ope {
+                                            operation: Some("=".to_string()),
+                                            key: Some(k.value.clone()),
+                                            value: Some(v.value.clone()),
+                                        });
                                     }
                                 }
-                                _ => {}
                             }
-                        }
-                        ParseState::InSet => {
-                            match tokentype {
-                                TokenType::Operation => {
-                                    if value == "=" {
-                                        if let (Some(k), Some(v)) = (token_stream.get(i - 1), token_stream.get(i + 1)) {
-                                            map_s.push(Ope{operation: Some("=".to_string()), key: Some(k.value.clone()), value: Some(v.value.clone())});
-                                        }
+                            _ => {}
+                        },
+                        ParseState::InSet => match tokentype {
+                            TokenType::Operation => {
+                                if value == "=" {
+                                    if let (Some(k), Some(v)) =
+                                        (token_stream.get(i - 1), token_stream.get(i + 1))
+                                    {
+                                        map_s.push(Ope {
+                                            operation: Some("=".to_string()),
+                                            key: Some(k.value.clone()),
+                                            value: Some(v.value.clone()),
+                                        });
                                     }
                                 }
-                                _ => {}
                             }
-                        }
-                        
+                            _ => {}
+                        },
+
                         _ => {}
-                    }
-                    
+                    },
+
                     _ => {}
-                }
+                },
                 TokenType::Boundary => match value {
                     "(" => match parsestate {
                         ParseState::InInsert => {
@@ -139,9 +144,11 @@ impl Parser {
                             loop {
                                 if let Some(t) = token_stream.get(mark) {
                                     match t.tokentype {
-                                        TokenType::String => {
-                                            map_s.push(Ope{operation: None, key: Some(t.value.clone()), value: None})
-                                        }
+                                        TokenType::String => map_s.push(Ope {
+                                            operation: None,
+                                            key: Some(t.value.clone()),
+                                            value: None,
+                                        }),
                                         TokenType::Boundary => {
                                             if t.value.as_str() == ")" {
                                                 break;
@@ -176,16 +183,16 @@ impl Parser {
                             }
                         }
                         _ => {}
-                    }
+                    },
                     _ => {}
-                }
+                },
                 TokenType::Number => {}
             }
         }
 
         Parser {
-            method: method.to_string(), 
-            table: table.to_string(), 
+            method: method.to_string(),
+            table: table.to_string(),
             map_s: map_s,
             map_c: map_c,
         }

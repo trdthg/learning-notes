@@ -301,6 +301,15 @@ int main(void) {
     insert(18, 2, tree);
     insert(19, 2, tree);
     insert(15, 2, tree);
+
+    insert(30, 2, tree);
+    insert(31, 2, tree);
+    insert(32, 2, tree);
+    // insert(33, 2, tree);
+    insert(34, 2, tree);
+    // insert(45, 2, tree);
+    // insert(36, 2, tree);
+
     printf("%d", tree->root->keys[1]);
     Node* find = search(9, tree->root);
     printf("%d", find->keys[1]);
