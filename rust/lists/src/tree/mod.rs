@@ -1,4 +1,4 @@
-pub mod insert;
+mod insert;
 
 use std::cell::RefCell;
 use std::rc::{Rc, Weak};
@@ -132,11 +132,8 @@ impl BPlusTree {
                     }
                 }
             }
-            _ => {
-
-            }
+            _ => {}
         }
-
     }
 }
 
@@ -147,44 +144,39 @@ mod test {
     fn a() {
         let now = std::time::Instant::now();
         let mut tree = BPlusTree::new();
-        // tree.insert(5, DataNode {});
-        // tree.insert(8, DataNode {});
-        // tree.insert(10, DataNode {});
-        // tree.insert(15, DataNode {});
-        // tree.insert(16, DataNode {});
-        // tree.insert(17, DataNode {});
-        // tree.insert(18, DataNode {});
-        // tree.insert(19, DataNode {});
-        // tree.insert(20, DataNode {});
-        // tree.insert(21, DataNode {});
-        // tree.insert(22, DataNode {});
-        // tree.insert(23, DataNode {});
-        // tree.insert(24, DataNode {});
-        // tree.insert(25, DataNode {});
-        // tree.insert(26, DataNode {});
-        // tree.insert(7, DataNode {});
-        // tree.insert(2, DataNode {});
-        // tree.insert(30, DataNode {});
-        // tree.insert(31, DataNode {});
-        // tree.insert(32, DataNode {});
-        // tree.insert(33, DataNode {});
-
-        // tree.insert(34, DataNode {});
-        // tree.insert(35, DataNode {});
-        // tree.insert(36, DataNode {});
-        for i in 1..19 {
+        for i in 1..7 {
             // tree.insert(i, DataNode {});
             // std::thread::sleep(std::time::Duration::from_nanos(10000));
-            tree.insert(i, DataNode{});
+            // tree.insert(i, DataNode {});
         }
-        tree.insert(19, DataNode{});
-        
+        tree.insert(1, DataNode {});
+        tree.insert(2, DataNode {});
+        tree.insert(3, DataNode {});
+        tree.insert(4, DataNode {});
+        tree.insert(5, DataNode {});
+        tree.insert(6, DataNode {});
+        tree.insert(7, DataNode {});
+        tree.insert(8, DataNode {});
+        tree.insert(9, DataNode {});
+        tree.insert(10, DataNode {});
+        tree.insert(11, DataNode {});
+        tree.insert(12, DataNode {});
+        tree.insert(13, DataNode {});
+        tree.insert(14, DataNode {});
+        tree.insert(15, DataNode {});
+        tree.insert(16, DataNode {});
+        tree.insert(17, DataNode {});
+        tree.insert(18, DataNode {});
+        tree.insert(19, DataNode {});
+        for i in 19..40 {
+            tree.insert(i, DataNode {});
+        }
+        println!("------------------------------------");
         tree.travel();
         println!("{:?}", now.elapsed());
-        // tree.insert(2, DataNode {});
 
-        println!("{:?}", tree);
-        println!("{:#?}", tree);
+        // println!("{:?}", tree);
+        // println!("{:#?}", tree);
     }
 
     #[test]
@@ -215,5 +207,15 @@ mod test {
         let a = vec![1, 1, 1, 1, 1];
         let b = a[0..1].to_owned();
         println!("{:?}", &a[1..4]);
+    }
+
+    #[test]
+    fn d() {
+        let a = Rc::new(RefCell::new(1));
+        *a.borrow_mut() = 2;
+        *a.borrow_mut() = 3;
+        a.borrow();
+        let c = a.borrow_mut();
+        println!("{:?}", *c);
     }
 }
