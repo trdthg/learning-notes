@@ -170,7 +170,7 @@ pub fn trim_code(code: &str) -> String {
     re = Regex::new("\\s+").unwrap();
     let mut code = Regex::replace_all(&re, &code, " ");
 
-    // // 格式化运算符和边界符
+    // 格式化运算符和边界符
     re = Regex::new("\\s?=\\s?").unwrap();
     let mut code = Regex::replace_all(&re, &code, " = ");
     re = Regex::new("\\s?\\(\\s?").unwrap();

@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use crate::tree;
+
 use super::token::{self, Token, TokenState, TokenType};
 
 // 兼容更多keyword
@@ -12,11 +14,13 @@ pub enum ParseState {
     InFrom,
     InWhere,
     InInsert,
+    InInto,
     InValues,
     InUpdate,
     InDelete,
     InSet,
     InOrder,
+    InBoundary,
     End,
 }
 
@@ -79,10 +83,8 @@ impl Parser {
                     }
                     _ => {}
                 },
-
                 TokenType::String => match parsestate {
                     ParseState::InInsert => {
-                        let a = 1;
                         table = &value;
                     }
                     ParseState::InFrom => {
@@ -140,6 +142,7 @@ impl Parser {
                 TokenType::Boundary => match value {
                     "(" => match parsestate {
                         ParseState::InInsert => {
+                            parsestate = ParseState::InInto;
                             let mut mark = i;
                             loop {
                                 if let Some(t) = token_stream.get(mark) {
@@ -197,6 +200,42 @@ impl Parser {
             map_c: map_c,
         }
     }
+
+    pub fn execute(&mut self) {
+        use super::super::tree::{BPlusTree, DataNode};
+
+        // let mut tree_user = BPlusTree::new("user");
+        let mut tree_user = BPlusTree::de("mydb.db");
+        let mut tree_map = HashMap::new();
+        tree_map.insert("user", tree_user);
+
+        match self.method.as_str() {
+            "insert" => {
+                let table = self.table.as_str();
+                let datanode = {
+                    let mut datanode = DataNode::default();
+                    let mut id = String::new();
+                    for ope in &self.map_s {
+                        // println!("{:?}", ope);
+                        let value = ope.value.as_ref().unwrap();
+                        match ope.key.as_ref().unwrap().as_str() {
+                            "id" => datanode.id = value.parse::<usize>().unwrap(),
+                            "name" => datanode.data = value.clone(),
+                            _ => {}
+                        }
+                    }
+                    datanode
+                };
+                tree_map
+                    .get_mut(table)
+                    .unwrap()
+                    .insert(datanode.id, datanode.data.as_str());
+            }
+            _ => {}
+        }
+        println!("{:#?}", tree_map);
+        tree_map.get("user").unwrap().se("mydb.db");
+    }
 }
 
 #[test]
@@ -209,4 +248,18 @@ fn test() {
     println!("{:#?}", token_stream);
     let mut parser: Parser = Parser::parse(token_stream);
     println!("{:#?}", parser);
+}
+
+#[test]
+fn get_fun() {
+    let sql = "SELECT  * from  adwdw where   a   =ad  and b=ad ";
+    let sql = "   \ninsert into user(id,name)values(1,\"saadwdd\")where id=1; ";
+    let sql = "update  user  set          id=1,name=\"acbeix\" where xxx=\"debsxnk\"";
+    let sql = "delete from user where id = 12";
+    let sql = "   \ninsert into user(id,name)values(1,\"saadwdd\") where id = 1 ";
+    let mut token_stream = token::trim_to_token_stream(&token::trim_code(sql));
+    let mut parser: Parser = Parser::parse(token_stream);
+    println!("{:#?}", parser);
+
+    parser.execute();
 }

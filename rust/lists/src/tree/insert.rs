@@ -1,18 +1,12 @@
-use std::cell::RefMut;
+use std::{cell::RefMut, ptr::NonNull};
 
 use super::*;
 
-pub fn insert_leaf(node: &Rc<RefCell<LeafNode>>, id: usize, data: DataNode) -> usize {
+pub fn insert_leaf(node: &Rc<RefCell<LeafNode>>, id: usize, data: &str) -> usize {
     let mut node = node.borrow_mut();
-    let ids: Vec<usize> = node
-        .ids
-        .iter()
-        .filter_map(|t| Some(t.id.unwrap()))
-        .collect();
+    let ids: Vec<usize> = node.ids.iter().filter_map(|t| Some(t.id)).collect();
     let pos = ids.binary_search(&id).unwrap_or_else(|x| x);
-    println!("{}", pos);
-    node.ids.insert(pos, Node::new(id, LinkType::Data(data)));
-    println!("{}", node.ids.len());
+    node.ids.insert(pos, DataNode::new(id, data));
     node.ids.len()
 }
 
@@ -29,15 +23,16 @@ pub fn splite_leaf(node: &Rc<RefCell<LeafNode>>) -> Rc<RefCell<BranchNode>> {
         father: Some(Rc::downgrade(&p_t)),
     };
     let p_r = Rc::new(RefCell::new(new_right));
-    let new_left = LeafNode {
+    let mut new_left = LeafNode {
         ids: tmp[0..2].to_owned(),
         next: Some(p_r.clone()),
         father: Some(Rc::downgrade(&p_t)),
     };
+    // new_left.ids[0].id = None;
     let p_l = Rc::new(RefCell::new(new_left));
     p_t.borrow_mut().ids = vec![
         Node {
-            id: tmp.get(2).unwrap().id,
+            id: Some(tmp.get(2).unwrap().id),
             link: LinkType::Leaf(p_l.clone()),
         },
         Node {
@@ -53,9 +48,14 @@ pub fn leaf_merge_with_father(
     leaf_node: &Rc<RefCell<LeafNode>>,
     pos: usize,
 ) -> usize {
+    let all_ids: Vec<Option<usize>> = node.borrow().ids.clone().iter().map(|x| x.id).collect();
+    // println!("----------------------------------------{:?}", all_ids);
+    drop(all_ids);
     if node.borrow().ids.get(pos).unwrap().id.is_some() {
         let new_top = splite_leaf(leaf_node);
-        node.borrow_mut().ids.insert(pos, new_top.borrow().ids[0].clone());
+        node.borrow_mut()
+            .ids
+            .insert(pos, new_top.borrow().ids[0].clone());
         // 新的father
         if let LinkType::Leaf(leaf) = &new_top.borrow_mut().ids[0].link {
             leaf.borrow_mut().father = Some(Rc::downgrade(&node));
@@ -64,7 +64,7 @@ pub fn leaf_merge_with_father(
             leaf.borrow_mut().father = Some(Rc::downgrade(&node));
         }
 
-        // // 新的next
+        // 新的next
         if let LinkType::Leaf(leaf) = &node.borrow().ids[pos + 1].link {
             if let LinkType::Leaf(new_next) = &new_top.borrow().ids[1].link {
                 leaf.borrow_mut().next = Some(new_next.clone());
@@ -100,14 +100,14 @@ pub fn leaf_merge_with_father(
         node.borrow_mut().ids.push(new_top.borrow().ids[1].clone());
         // 新的数值
     }
-    node.borrow().ids.len()
+    let len = node.borrow().ids.len();
+    // println!("{}", len);
+    len
 }
 
 pub fn splite_branch(node: Rc<RefCell<BranchNode>>) -> Rc<RefCell<BranchNode>> {
     // 记录之前的节点
-    let tmp = unsafe {
-        (*node.as_ptr()).ids.clone()
-    };
+    let tmp = unsafe { (*node.as_ptr()).ids.clone() };
 
     // new_top
     let mut new_top = BranchNode {
@@ -117,10 +117,11 @@ pub fn splite_branch(node: Rc<RefCell<BranchNode>>) -> Rc<RefCell<BranchNode>> {
     let p_t = Rc::new(RefCell::new(new_top));
 
     // 左右
-    let new_left = BranchNode {
-        ids: tmp[0..2].to_owned(),
+    let mut new_left = BranchNode {
+        ids: tmp[0..3].to_owned(),
         father: Some(Rc::downgrade(&p_t)),
     };
+    new_left.ids[2].id = None;
     // 不用保留重复节点
     let new_right = BranchNode {
         ids: tmp[3..6].to_owned(),
@@ -143,12 +144,13 @@ pub fn splite_branch(node: Rc<RefCell<BranchNode>>) -> Rc<RefCell<BranchNode>> {
 }
 
 pub fn branch_merge_with_father(
-    father: Rc<RefCell<BranchNode>>, // branch是已经满了的节点
+    father: Rc<RefCell<BranchNode>>,  // branch是已经满了的节点
     new_top: Rc<RefCell<BranchNode>>, // branch是已经满了的节点
 ) -> usize {
     let ids: Vec<usize> = father
         .borrow()
-        .ids.clone()
+        .ids
+        .clone()
         .iter()
         .filter(|t| t.id.is_some())
         .map(|t| t.id.unwrap())
@@ -186,19 +188,17 @@ pub fn branch_merge_with_father(
     node.ids.len()
 }
 
-pub fn merge(_node:  Rc<RefCell<BranchNode>>) -> Option<Rc<RefCell<BranchNode>>> {
-    // 已经是一个满了的branch_node
+pub fn merge(_node: Rc<RefCell<BranchNode>>) -> Option<Rc<RefCell<BranchNode>>> {
+    // * 已经是一个满了的branch_node, 需要拆分合并
 
     // splite父节点
-    let father_is_none = unsafe {
-        (*_node.as_ptr()).father.as_ref().is_none()
-    };
+    let father_is_none = unsafe { (*_node.as_ptr()).father.as_ref().is_none() };
     if father_is_none {
         let new_top = splite_branch(_node);
         return Some(new_top);
     } else {
-        // 是否递归与父节点合并
-        // !!! 这里是一个MARK, 防止越改越乱, 救不回来就完了s
+        // ? 是否递归与父节点合并
+        // ! 这里是一个MARK, 防止越改越乱, 救不回来就完了s
         // let new_top = splite_branch(_node);
         let tmp = _node.borrow().ids.clone();
         // new_top
@@ -209,10 +209,13 @@ pub fn merge(_node:  Rc<RefCell<BranchNode>>) -> Option<Rc<RefCell<BranchNode>>>
         let p_t = Rc::new(RefCell::new(new_top));
 
         // 左右
-        let new_left = BranchNode {
-            ids: tmp[0..2].to_owned(),
+        let mut new_left = BranchNode {
+            ids: tmp[0..3].to_owned(),
             father: Some(Rc::downgrade(&p_t)),
         };
+        new_left.ids[2].id = None;
+        let all_ids: Vec<Option<usize>> = new_left.ids.clone().iter().map(|x| x.id).collect();
+        // println!("\n+++++++++++++new_left {:?}\n", all_ids);
         // 不用保留重复节点
         let new_right = BranchNode {
             ids: tmp[3..6].to_owned(),
@@ -234,12 +237,20 @@ pub fn merge(_node:  Rc<RefCell<BranchNode>>) -> Option<Rc<RefCell<BranchNode>>>
         let new_top = p_t.clone();
         drop(p_t);
         if _node.borrow().father.as_ref().unwrap().upgrade().is_some() {
-            let father = _node.borrow().father.as_ref().unwrap().upgrade().unwrap().clone();
+            let father = _node
+                .borrow()
+                .father
+                .as_ref()
+                .unwrap()
+                .upgrade()
+                .unwrap()
+                .clone();
             drop(_node);
             // let father = borrowed_father.as_ref().unwrap().upgrade().unwrap().clone();;
             let pos = unsafe {
                 let ids: Vec<usize> = (*father.as_ptr())
-                    .ids.clone()
+                    .ids
+                    .clone()
                     .iter()
                     .filter(|t| t.id.is_some())
                     .map(|t| t.id.unwrap())
@@ -295,7 +306,7 @@ pub fn merge(_node:  Rc<RefCell<BranchNode>>) -> Option<Rc<RefCell<BranchNode>>>
 pub fn find_leaf(
     _node: &Rc<RefCell<BranchNode>>,
     id: usize,
-    data: DataNode,
+    data: &str,
 ) -> Option<Rc<RefCell<BranchNode>>> {
     let mut node = _node.borrow_mut();
     let pos = {
@@ -306,7 +317,6 @@ pub fn find_leaf(
             .map(|t| t.id.unwrap())
             .collect();
         let mut pos = ids.binary_search(&id).unwrap_or_else(|x| x);
-        println!("all ids: {} ids: {:?} pos: {}", node.ids.len(), ids, &pos);
         pos
     };
     match &node.ids.get(pos).unwrap().link.clone() {

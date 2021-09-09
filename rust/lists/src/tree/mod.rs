@@ -1,22 +1,26 @@
-mod insert;
+pub mod builder;
+pub mod filemanager;
+pub mod insert;
 
 use std::cell::RefCell;
+use std::fs::File;
+use std::io::{BufReader, Read, Write};
 use std::rc::{Rc, Weak};
 
 use insert::*;
 
+use serde_derive::{Deserialize, Serialize};
+
 const MAX_DEGREE: usize = 5;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum LinkType {
     Branch(Rc<RefCell<BranchNode>>),
     Leaf(Rc<RefCell<LeafNode>>),
     Data(DataNode),
 }
 
-#[derive(Clone, Debug)]
-pub struct DataNode {}
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Node {
     pub id: Option<usize>,
     pub link: LinkType,
@@ -27,7 +31,7 @@ impl Node {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BranchNode {
     pub ids: Vec<Node>,
     pub father: Option<Weak<RefCell<BranchNode>>>,
@@ -38,16 +42,29 @@ impl BranchNode {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct DataNode {
+    pub id: usize,
+    pub data: String,
+}
+impl DataNode {
+    pub fn new(id: usize, data: &str) -> Self {
+        DataNode {
+            id,
+            data: data.to_string(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct LeafNode {
-    pub ids: Vec<Node>,
+    pub ids: Vec<DataNode>,
     pub father: Option<Weak<RefCell<BranchNode>>>,
     pub next: Option<Rc<RefCell<LeafNode>>>,
 }
 impl LeafNode {
-    pub fn new(id: usize, data: DataNode) -> LeafNode {
-        let link = LinkType::Data(data);
-        let ids = vec![Node::new(id, link)];
+    pub fn new(id: usize, data: &str) -> LeafNode {
+        let ids = vec![DataNode::new(id, data)];
         LeafNode {
             ids,
             next: None,
@@ -55,17 +72,36 @@ impl LeafNode {
         }
     }
 }
-#[derive(Debug)]
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct BPlusTree {
+    pub name: String,
     pub root: Option<LinkType>,
 }
 
 impl BPlusTree {
-    pub fn new() -> BPlusTree {
-        BPlusTree { root: None }
+    pub fn new(name: &str) -> BPlusTree {
+        BPlusTree {
+            name: name.to_string(),
+            root: None,
+        }
     }
 
-    fn insert(&mut self, id: usize, data: DataNode) {
+    pub fn de(name: &str) -> Self {
+        let f = File::open(name).unwrap();
+        let mut s = String::new();
+        let mut reader = BufReader::new(f);
+        reader.read_to_string(&mut s).unwrap();
+        serde_json::from_str::<Self>(&s).unwrap()
+    }
+
+    pub fn se(&self, name: &str) {
+        let sered = serde_json::to_string(self).unwrap();
+        let mut f = File::create(name).unwrap();
+        f.write(sered.as_bytes()).unwrap();
+    }
+
+    pub fn insert(&mut self, id: usize, data: &str) {
         match &self.root.clone() {
             Some(LinkType::Leaf(node)) => {
                 let len = insert_leaf(node, id, data);
@@ -86,50 +122,91 @@ impl BPlusTree {
         }
     }
 
-    fn aaa(node: Rc<RefCell<BranchNode>>) {
-        for id in node.borrow().ids.clone() {
-            match id.link {
-                LinkType::Branch(branch) => {
-                    for d in branch.borrow().clone().ids {
-                        if d.id.is_some() {
-                            println!("{}", d.id.unwrap());
-                        }
+    pub fn select(&self, id: usize) -> Option<DataNode> {
+        match &self.root.clone() {
+            Some(LinkType::Leaf(leaf)) => {
+                let mut res = None;
+                for tuple in &leaf.borrow().ids {
+                    if id == tuple.id {
+                        res = Some(tuple.clone())
                     }
                 }
-                LinkType::Leaf(leaf) => {
-                    for d in leaf.borrow().clone().ids {
-                        if d.id.is_some() {
-                            println!("{}", d.id.unwrap());
-                        }
-                    }
-                }
-                _ => {}
+                return res;
             }
+            Some(LinkType::Branch(_node)) => None,
+            _ => None,
         }
     }
 
-    fn travel(&self) {
+    pub fn travel(&self) {
         // TODO
+        let mut vec = Vec::new();
+        let mut vec2 = Vec::new();
         match self.root.clone() {
             Some(LinkType::Branch(node)) => {
-                for id in node.borrow().ids.clone() {
-                    match id.link {
-                        LinkType::Branch(branch) => {
-                            for d in branch.borrow().clone().ids {
-                                if d.id.is_some() {
-                                    println!("{}", d.id.unwrap());
-                                }
+                vec.push(node.clone());
+                while vec.len() != 0 {
+                    let a = vec.pop().unwrap();
+                    for tuple in a.borrow().ids.clone() {
+                        println!("{:?}", tuple.id);
+                        match tuple.link {
+                            LinkType::Branch(branch) => {
+                                vec.insert(0, branch.clone());
                             }
-                        }
-                        LinkType::Leaf(leaf) => {
-                            for d in leaf.borrow().clone().ids {
-                                if d.id.is_some() {
-                                    println!("{}", d.id.unwrap());
-                                }
+                            LinkType::Leaf(leaf) => {
+                                vec2.insert(0, leaf);
                             }
+                            _ => {}
                         }
-                        _ => {}
                     }
+                }
+                while vec2.len() != 0 {
+                    let leaf = vec2.pop();
+                    for tuple in &leaf.unwrap().borrow().ids {
+                        // println!("{:?}", tuple.id);
+                    }
+                }
+            }
+            Some(LinkType::Leaf(leaf)) => {
+                for tuple in leaf.borrow().ids.clone() {
+                    println!("{:?}", tuple.id);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    pub fn se_self(&mut self) {
+        let mut vec = Vec::new();
+        let mut vec2 = Vec::new();
+        match self.root.clone() {
+            Some(LinkType::Branch(node)) => {
+                vec.push(node.clone());
+                while vec.len() != 0 {
+                    let a = vec.pop().unwrap();
+                    for tuple in a.borrow().ids.clone() {
+                        println!("{:?}", tuple.id);
+                        match tuple.link {
+                            LinkType::Branch(branch) => {
+                                vec.insert(0, branch.clone());
+                            }
+                            LinkType::Leaf(leaf) => {
+                                vec2.insert(0, leaf);
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+                while vec2.len() != 0 {
+                    let leaf = vec2.pop();
+                    for tuple in &leaf.unwrap().borrow().ids {
+                        // println!("{:?}", tuple.id);
+                    }
+                }
+            }
+            Some(LinkType::Leaf(leaf)) => {
+                for tuple in leaf.borrow().ids.clone() {
+                    println!("{:?}", tuple.id);
                 }
             }
             _ => {}
@@ -139,44 +216,54 @@ impl BPlusTree {
 
 #[cfg(test)]
 mod test {
+    use std::mem::size_of;
+
     use super::*;
     #[test]
     fn a() {
         let now = std::time::Instant::now();
-        let mut tree = BPlusTree::new();
-        for i in 1..7 {
-            // tree.insert(i, DataNode {});
-            // std::thread::sleep(std::time::Duration::from_nanos(10000));
-            // tree.insert(i, DataNode {});
+        let mut tree = BPlusTree::new("tmp");
+        for i in 1..=13 {
+            println!("------------------{}----------------", i);
+            tree.insert(i, "sss");
         }
-        tree.insert(1, DataNode {});
-        tree.insert(2, DataNode {});
-        tree.insert(3, DataNode {});
-        tree.insert(4, DataNode {});
-        tree.insert(5, DataNode {});
-        tree.insert(6, DataNode {});
-        tree.insert(7, DataNode {});
-        tree.insert(8, DataNode {});
-        tree.insert(9, DataNode {});
-        tree.insert(10, DataNode {});
-        tree.insert(11, DataNode {});
-        tree.insert(12, DataNode {});
-        tree.insert(13, DataNode {});
-        tree.insert(14, DataNode {});
-        tree.insert(15, DataNode {});
-        tree.insert(16, DataNode {});
-        tree.insert(17, DataNode {});
-        tree.insert(18, DataNode {});
-        tree.insert(19, DataNode {});
-        for i in 19..40 {
-            tree.insert(i, DataNode {});
-        }
+        // tree.insert(6, DataNode { id: 6, name: "".to_string() });
+        // tree.insert(1, DataNode {});
+        // tree.insert(2, DataNode {});
+        // tree.insert(3, DataNode {});
+        // tree.insert(4, DataNode {});
+        // tree.insert(5, DataNode {});
+        // tree.insert(6, DataNode {});
+        // tree.insert(7, DataNode {});
+        // tree.insert(8, DataNode {});
+        // tree.insert(9, DataNode {});
+        // tree.insert(10, DataNode {});
+        // tree.insert(11, DataNode {});
+        // tree.insert(12, DataNode {});
+        // tree.insert(13, DataNode {});
+        // tree.insert(14, DataNode {});
+        // tree.insert(15, DataNode {});
+        // tree.insert(16, DataNode {});
+        // tree.insert(17, DataNode {});
+        // tree.insert(18, DataNode {});
+        // tree.insert(19, DataNode {});
         println!("------------------------------------");
         tree.travel();
         println!("{:?}", now.elapsed());
 
         // println!("{:?}", tree);
         // println!("{:#?}", tree);
+    }
+
+    #[test]
+    fn a2() {
+        use std::mem::size_of;
+        println!("bplustree: {}", size_of::<BPlusTree>());
+        println!("linktype: {}", size_of::<LinkType>());
+        println!("branchnode: {}", size_of::<BranchNode>());
+        println!("leafnode: {}", size_of::<LeafNode>());
+        println!("datanode: {}", size_of::<DataNode>());
+        println!("father: {}", size_of::<Option<Weak<RefCell<BranchNode>>>>());
     }
 
     #[test]
@@ -188,7 +275,7 @@ mod test {
         //     Err(pos) => s.insert(pos, num),
         // }
         let mut s = vec![1, 5, 9];
-        let num = 10;
+        let num = 9;
         let idx = s.binary_search(&num).unwrap_or_else(|x| x);
         match s.get(idx) {
             Some(_) => {
