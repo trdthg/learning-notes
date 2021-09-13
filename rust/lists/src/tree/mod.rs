@@ -223,7 +223,7 @@ mod test {
     fn a() {
         let now = std::time::Instant::now();
         let mut tree = BPlusTree::new("tmp");
-        for i in 1..=13 {
+        for i in 1..=19 {
             println!("------------------{}----------------", i);
             tree.insert(i, "sss");
         }

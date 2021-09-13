@@ -1,7 +1,7 @@
+use std::io::{BufRead, BufReader, Read, Write};
+use std::thread;
 use std::time::Duration;
 use std::{io::Result, net::TcpStream};
-use std::io::{Read, Write, BufRead, BufReader};
-use std::thread;
 
 fn req(addr: &str, msg: &str) -> Result<()> {
     // 客户端需要接受到完整的信息, 可以用vec_buf
@@ -29,7 +29,7 @@ fn req(addr: &str, msg: &str) -> Result<()> {
     // println!("{}", String::from_utf8_lossy(&buf));
     // println!("read 1: {}, buf_now {:?}", read_buf, String::from_utf8_lossy(&buf));
     // // 每次读入都只会从开头开始覆盖内容
-    
+
     // let read_buf = stream.read(&mut buf)?;
     // println!("read 2: {}, buf_now {:?}", read_buf, String::from_utf8_lossy(&buf));
     Ok(())
@@ -45,15 +45,14 @@ async fn async_req(addr: &str, msg: &str) -> Result<()> {
     Ok(())
 }
 
-
-async fn req1(addr: &str, msg: &str) -> usize{
+async fn req1(addr: &str, msg: &str) -> usize {
     async_req(addr, msg).await;
     async_req(addr, msg).await;
     println!("1");
     1
 }
 
-async fn req2(addr: &str, msg: &str) -> usize{
+async fn req2(addr: &str, msg: &str) -> usize {
     // async_req(addr, msg).await;
     println!("2");
     2
@@ -75,7 +74,7 @@ pub fn main() -> Result<()> {
     // let c = futures::executor::block_on(f);
     // println!("{:?}", start.elapsed());
     use futures::try_join;
-    
+
     // let a = async { let mut a = 0;for i in 0..1_000_000 { a += 1;}; println!("1"); Ok::<i32, i32>(1) };
     // let a2 = async { let mut a = 0;for i in 0..1_000_000 { a += 1;}; println!("1"); Ok::<i32, i32>(1) };
     // let b = async { println!("2"); Ok::<i32, i32>(2) };

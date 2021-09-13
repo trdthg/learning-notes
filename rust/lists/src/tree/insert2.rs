@@ -32,11 +32,11 @@ pub fn splite_leaf(node: &Rc<RefCell<LeafNode>>) -> Rc<RefCell<BranchNode>> {
     let p_l = Rc::new(RefCell::new(new_left));
     p_t.borrow_mut().ids = vec![
         Node {
-            id: Some(0),
+            id: Some(tmp.get(2).unwrap().id),
             link: LinkType::Leaf(p_l.clone()),
         },
         Node {
-            id: Some(tmp.get(2).unwrap().id),
+            id: None,
             link: LinkType::Leaf(p_r.clone()),
         },
     ];
@@ -48,42 +48,60 @@ pub fn leaf_merge_with_father(
     leaf_node: &Rc<RefCell<LeafNode>>,
     pos: usize,
 ) -> usize {
-    // 获取父节点所有id
     let all_ids: Vec<Option<usize>> = node.borrow().ids.clone().iter().map(|x| x.id).collect();
+    // println!("----------------------------------------{:?}", all_ids);
     drop(all_ids);
-    // 分离已经满了的叶节点
-    let new_top = splite_leaf(leaf_node);
-    // 插入新节点
-    node.borrow_mut()
-        .ids
-        .insert(pos, new_top.borrow().ids[1].clone());
-    node.borrow_mut().ids[pos - 1].link = new_top.borrow().ids[0].link.clone();
+    if node.borrow().ids.get(pos).unwrap().id.is_some() {
+        let new_top = splite_leaf(leaf_node);
+        node.borrow_mut()
+            .ids
+            .insert(pos, new_top.borrow().ids[0].clone());
+        // 新的father
+        if let LinkType::Leaf(leaf) = &new_top.borrow_mut().ids[0].link {
+            leaf.borrow_mut().father = Some(Rc::downgrade(&node));
+        }
+        if let LinkType::Leaf(leaf) = &new_top.borrow_mut().ids[1].link {
+            leaf.borrow_mut().father = Some(Rc::downgrade(&node));
+        }
 
-    // 新的father
-    if let LinkType::Leaf(leaf) = &new_top.borrow_mut().ids[0].link {
-        leaf.borrow_mut().father = Some(Rc::downgrade(&node));
-    }
-    if let LinkType::Leaf(leaf) = &new_top.borrow_mut().ids[1].link {
-        leaf.borrow_mut().father = Some(Rc::downgrade(&node));
+        // 新的next
+        if let LinkType::Leaf(leaf) = &node.borrow().ids[pos + 1].link {
+            if let LinkType::Leaf(new_next) = &new_top.borrow().ids[1].link {
+                leaf.borrow_mut().next = Some(new_next.clone());
+            }
+        }
+        if pos != 0 {
+            if let LinkType::Leaf(leaf) = &node.borrow().ids[pos - 1].link {
+                if let LinkType::Leaf(new_next) = &new_top.borrow().ids[0].link {
+                    leaf.borrow_mut().next = Some(new_next.clone());
+                }
+            }
+        }
+        // 修正
+        node.borrow_mut().ids[pos + 1].link = new_top.borrow().ids[1].link.clone();
+    } else {
+        // 新的father
+        let new_top = splite_leaf(leaf_node);
+        drop(leaf_node);
+        if let LinkType::Leaf(leaf) = &new_top.borrow_mut().ids[0].link {
+            leaf.borrow_mut().father = Some(Rc::downgrade(&node));
+        }
+        if let LinkType::Leaf(leaf) = &new_top.borrow_mut().ids[1].link {
+            leaf.borrow_mut().father = Some(Rc::downgrade(&node));
+        }
+        // 新的next
+        if let LinkType::Leaf(leaf) = &node.borrow().ids[pos - 1].link {
+            if let LinkType::Leaf(new_next) = &new_top.borrow().ids[0].link {
+                leaf.borrow_mut().next = Some(new_next.clone());
+            }
+        }
+        node.borrow_mut().ids[pos].id = new_top.borrow().ids[0].id;
+        node.borrow_mut().ids[pos].link = new_top.borrow().ids[0].link.clone();
+        node.borrow_mut().ids.push(new_top.borrow().ids[1].clone());
+        // 新的数值
     }
     let len = node.borrow().ids.len();
-    // 新的next
-    // 后驱
-    if pos + 1 != len {
-        if let LinkType::Leaf(leaf) = &node.borrow().ids[pos].link {
-            if let LinkType::Leaf(new_next) = &node.borrow().ids[pos + 1].link {
-                leaf.borrow_mut().next = Some(new_next.clone());
-            }
-        }
-    }
-    // 前驱
-    if pos != 1 {
-        if let LinkType::Leaf(leaf) = &node.borrow().ids[pos - 1].link {
-            if let LinkType::Leaf(new_next) = &node.borrow().ids[pos - 2].link {
-                leaf.borrow_mut().next = Some(new_next.clone());
-            }
-        }
-    }
+    // println!("{}", len);
     len
 }
 
@@ -103,21 +121,21 @@ pub fn splite_branch(node: Rc<RefCell<BranchNode>>) -> Rc<RefCell<BranchNode>> {
         ids: tmp[0..3].to_owned(),
         father: Some(Rc::downgrade(&p_t)),
     };
+    new_left.ids[2].id = None;
     // 不用保留重复节点
-    let mut new_right = BranchNode {
+    let new_right = BranchNode {
         ids: tmp[3..6].to_owned(),
         father: Some(Rc::downgrade(&p_t)),
     };
-    new_right.ids[0].id = Some(0);
     let p_l = Rc::new(RefCell::new(new_left));
     let p_r = Rc::new(RefCell::new(new_right));
     p_t.borrow_mut().ids = vec![
         Node {
-            id: Some(0),
+            id: tmp.get(2).unwrap().id,
             link: LinkType::Branch(p_l.clone()),
         },
         Node {
-            id: tmp.get(3).unwrap().id,
+            id: None,
             link: LinkType::Branch(p_r.clone()),
         },
     ];
@@ -195,21 +213,23 @@ pub fn merge(_node: Rc<RefCell<BranchNode>>) -> Option<Rc<RefCell<BranchNode>>> 
             ids: tmp[0..3].to_owned(),
             father: Some(Rc::downgrade(&p_t)),
         };
+        new_left.ids[2].id = None;
+        let all_ids: Vec<Option<usize>> = new_left.ids.clone().iter().map(|x| x.id).collect();
+        // println!("\n+++++++++++++new_left {:?}\n", all_ids);
         // 不用保留重复节点
-        let mut new_right = BranchNode {
+        let new_right = BranchNode {
             ids: tmp[3..6].to_owned(),
             father: Some(Rc::downgrade(&p_t)),
         };
-        new_right.ids[0].id = Some(0);
         let p_l = Rc::new(RefCell::new(new_left));
         let p_r = Rc::new(RefCell::new(new_right));
         p_t.borrow_mut().ids = vec![
             Node {
-                id: Some(0),
+                id: tmp.get(2).unwrap().id,
                 link: LinkType::Branch(p_l.clone()),
             },
             Node {
-                id: tmp.get(3).unwrap().id,
+                id: None,
                 link: LinkType::Branch(p_r.clone()),
             },
         ];
@@ -235,23 +255,39 @@ pub fn merge(_node: Rc<RefCell<BranchNode>>) -> Option<Rc<RefCell<BranchNode>>> 
                     .filter(|t| t.id.is_some())
                     .map(|t| t.id.unwrap())
                     .collect();
-                let id = new_top.borrow().ids[1].id.unwrap();
+                let id = new_top.borrow().ids[0].id.unwrap();
                 let pos = ids.binary_search(&id).unwrap_or_else(|x| x);
                 drop(ids);
                 pos
             };
             let len = unsafe {
                 let mut node = father.as_ptr();
-                if let LinkType::Branch(branch) = &new_top.borrow_mut().ids[0].link {
-                    branch.borrow_mut().father = Some(Rc::downgrade(&father));
+                match (*node).ids.get(pos).unwrap().id {
+                    Some(_) => {
+                        if let LinkType::Branch(branch) = &new_top.borrow_mut().ids[0].link {
+                            branch.borrow_mut().father = Some(Rc::downgrade(&father));
+                        }
+                        if let LinkType::Leaf(leaf) = &new_top.borrow_mut().ids[1].link {
+                            leaf.borrow_mut().father = Some(Rc::downgrade(&father));
+                        }
+                        (*node).ids.insert(pos, new_top.borrow_mut().ids[0].clone());
+                        // 修正
+                        (*node).ids[pos + 1].link = new_top.borrow().ids[1].link.clone();
+                    }
+                    None => {
+                        // 新的father
+                        if let LinkType::Branch(branch) = &new_top.borrow_mut().ids[0].link {
+                            branch.borrow_mut().father = Some(Rc::downgrade(&father));
+                        }
+                        if let LinkType::Leaf(leaf) = &new_top.borrow_mut().ids[1].link {
+                            leaf.borrow_mut().father = Some(Rc::downgrade(&father));
+                        }
+                        // 新的数值
+                        (*node).ids[pos].id = new_top.borrow().ids[0].id;
+                        (*node).ids[pos].link = new_top.borrow().ids[0].link.clone();
+                        (*node).ids.push(new_top.borrow().ids[1].clone());
+                    }
                 }
-                if let LinkType::Leaf(leaf) = &new_top.borrow_mut().ids[1].link {
-                    leaf.borrow_mut().father = Some(Rc::downgrade(&father));
-                }
-                // 修正
-                println!("{}", pos);
-                (*node).ids.insert(pos, new_top.borrow_mut().ids[1].clone());
-                (*node).ids[pos - 1].link = new_top.borrow().ids[0].link.clone();
                 let len = (*node).ids.len();
                 drop(node);
                 len
@@ -283,7 +319,7 @@ pub fn find_leaf(
         let mut pos = ids.binary_search(&id).unwrap_or_else(|x| x);
         pos
     };
-    match &node.ids.get(pos - 1).unwrap().link.clone() {
+    match &node.ids.get(pos).unwrap().link.clone() {
         LinkType::Leaf(leaf_node) => {
             // 先插入后看是否满再进行下一步操作
             if insert_leaf(leaf_node, id, data) == MAX_DEGREE {
