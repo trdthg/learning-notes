@@ -1,12 +1,14 @@
 #![allow(dead_code, unused_variables, unused)]
 
+use std::cell::RefCell;
 use std::convert::TryInto;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::mem::{size_of, take};
 use std::os::windows::prelude::FileExt;
+use std::rc::{Rc, Weak};
 
-use super::*;
+use super::super::tree::bplustree::*;
 
 const PAGE_SIZE: usize = 152;
 const HEADER_SIZE: usize = size_of::<FileHeader>() + size_of::<PageHeader>();
@@ -55,7 +57,7 @@ impl PageHeader {
 struct RowData {
     next: usize,
     id: usize,
-    data: String,
+    data: Vec<u8>,
 }
 #[derive(Debug, Clone)]
 struct RowIndex {
@@ -134,7 +136,7 @@ impl DataPage {
             // s.push_str(&format!("{}{}", row.next, row.data));
             s.append(&mut row.next.to_ne_bytes().to_vec());
             s.append(&mut row.id.to_ne_bytes().to_vec());
-            s.append(&mut row.data.as_bytes().to_vec());
+            s.append(&mut row.data.clone());
         }
         s
     }
@@ -158,7 +160,7 @@ impl DataPage {
                 datarecord.row.push(RowData {
                     next: next_offset,
                     id: tuple.id,
-                    data: tuple.data.clone(),
+                    data: tuple.data.as_bytes().to_vec(),
                 });
             }
             datarecord
@@ -175,14 +177,14 @@ impl DataPage {
         indexpage
     }
 
-    pub fn push(&mut self, id: usize, data: &str) {
+    pub fn push(&mut self, id: usize, data: Vec<u8>) {
         let mut start_row_offset = self.pageheader.page_heap_top;
         let next_offset = self.pageheader.page_last_insert;
-        let new_len = size_of::<usize>() * 2 + data.as_bytes().len();
+        let new_len = size_of::<usize>() * 2 + data.len();
         self.datarecord.row.push(RowData {
             next: (next_offset + new_len),
             id,
-            data: data.to_string(),
+            data: data,
         });
         self.datarecord.row.sort_by_key(|row| row.id);
         self.datarecord
@@ -190,8 +192,8 @@ impl DataPage {
             .iter_mut()
             .enumerate()
             .for_each(|(i, row)| {
-                row.next = start_row_offset + size_of::<usize>() * 2 + row.data.as_bytes().len();
-                start_row_offset += size_of::<usize>() * 2 + row.data.as_bytes().len();
+                row.next = start_row_offset + size_of::<usize>() * 2 + row.data.len();
+                start_row_offset += size_of::<usize>() * 2 + row.data.len();
             });
         // 重置某些属性
         self.pageheader.page_last_insert = start_row_offset;
@@ -205,12 +207,12 @@ enum PageType {
     Data(DataPage),
 }
 
-struct FileManager {
+pub(crate) struct PageManager {
     f: File,
     max_page_id: usize,
     root_page_id: usize,
 }
-impl FileManager {
+impl PageManager {
     pub fn create(file_name: &str) -> Self {
         let f = File::create(file_name).unwrap();
         f.seek_write(&[b'0'], 64 * PAGE_SIZE as u64).unwrap();
@@ -219,7 +221,7 @@ impl FileManager {
             .write(true)
             .open(file_name)
             .unwrap();
-        FileManager {
+        PageManager {
             f,
             max_page_id: 0,
             root_page_id: 0,
@@ -227,16 +229,15 @@ impl FileManager {
     }
 
     pub fn read_file(filename: &str) -> Self {
-        let f = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .open(filename)
-            .unwrap();
-        let max_page_id = Self::get_max_page_id(&f);
-        FileManager {
-            f,
-            max_page_id,
-            root_page_id: 0,
+        if let Ok(f) = OpenOptions::new().read(true).write(true).open(filename) {
+            let max_page_id = Self::get_max_page_id(&f);
+            PageManager {
+                f,
+                max_page_id,
+                root_page_id: 0,
+            }
+        } else {
+            Self::create(filename)
         }
     }
 
@@ -362,7 +363,7 @@ impl FileManager {
                             datarecord.row.push(RowData {
                                 next: next_offset,
                                 id: tuple.id,
-                                data: tuple.data.clone(),
+                                data: tuple.data.as_bytes().to_vec(),
                             });
                         }
                         datarecord
@@ -397,7 +398,7 @@ impl FileManager {
         Self::read_file(file_name.as_str())
     }
 
-    fn show(&self) {
+    pub fn show(&self) {
         let f = &self.f;
         for i in 0..=self.max_page_id as u64 {
             println!("-------------------------------");
@@ -541,11 +542,11 @@ impl FileManager {
                 f.seek_read(&mut buf, row_start + 8 * 1);
                 let id = usize::from_ne_bytes(buf);
                 f.seek_read(&mut sbuf, row_start + 8 * 2);
-                let s = String::from_utf8_lossy(&sbuf[0..len - 16]).to_string();
+                // let s = String::from_utf8_lossy(&sbuf[0..len - 16]).to_string();
                 datarecord.row.push(RowData {
                     next: row_next,
                     id,
-                    data: s,
+                    data: sbuf[0..len - 16].to_vec(),
                 });
                 row_start = row_next_u64;
             }
@@ -558,7 +559,7 @@ impl FileManager {
         }
     }
 
-    fn select_recursive(&self, page_id: usize, id: usize) -> Option<String> {
+    pub fn select_recursive(&self, page_id: usize, id: usize) -> Option<Vec<u8>> {
         let page_id: u64 = page_id.try_into().unwrap();
         let node = Self::get_page(self, page_id);
         match node {
@@ -587,7 +588,7 @@ impl FileManager {
         }
     }
 
-    fn insert(&mut self, id: usize, data: &str) {
+    pub fn insert(&mut self, id: usize, data: Vec<u8>) {
         let mut page_id: usize = self.root_page_id;
 
         // TODO 判断是否为空
@@ -643,7 +644,7 @@ impl FileManager {
                 }
             }
             None => {
-                let next = HEADER_SIZE + 24 + data.as_bytes().len();
+                let next = HEADER_SIZE + 24 + data.len();
                 let datapage = DataPage {
                     fileheader: FileHeader::new(0, 1),
                     pageheader: PageHeader::new(HEADER_SIZE, 1, next, 0, 0),
@@ -651,7 +652,7 @@ impl FileManager {
                         row: vec![RowData {
                             next: next,
                             id,
-                            data: data.to_string(),
+                            data: data,
                         }],
                     },
                 };
@@ -684,7 +685,7 @@ impl FileManager {
                     .iter_mut()
                     .enumerate()
                     .for_each(|(i, row)| {
-                        start_row_offset += size_of::<usize>() * 2 + row.data.as_bytes().len();
+                        start_row_offset += size_of::<usize>() * 2 + row.data.len();
                         row.next = start_row_offset;
                     });
                 node.pageheader.page_last_insert = start_row_offset;
@@ -700,9 +701,8 @@ impl FileManager {
                     .iter_mut()
                     .enumerate()
                     .for_each(|(i, row)| {
-                        row.next =
-                            start_row_offset + size_of::<usize>() * 2 + row.data.as_bytes().len();
-                        start_row_offset += size_of::<usize>() * 2 + row.data.as_bytes().len();
+                        row.next = start_row_offset + size_of::<usize>() * 2 + row.data.len();
+                        start_row_offset += size_of::<usize>() * 2 + row.data.len();
                     });
                 let right_n = {
                     if len % 2 == 1 {
@@ -999,34 +999,34 @@ impl FileManager {
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::mem::size_of;
+    use std::{io::BufReader, mem::size_of};
 
     #[test]
     fn g() {
-        let mut filemanager = FileManager::create("student.db");
-        filemanager.insert(1, "sss");
-        filemanager.insert(2, "sss");
-        filemanager.insert(3, "sss");
-        filemanager.insert(4, "sss");
-        filemanager.insert(5, "sss");
-        filemanager.insert(6, "sss");
-        filemanager.insert(7, "sss");
-        filemanager.insert(8, "sss");
-        filemanager.insert(9, "sss");
-        filemanager.insert(10, "sss");
-        filemanager.insert(11, "sss");
-        filemanager.insert(12, "sss");
-        filemanager.insert(13, "sss");
-        filemanager.insert(2, "sss");
-        filemanager.insert(2, "sss");
-        filemanager.insert(2, "sss");
-        // filemanager.insert(14, "sss");
+        let mut PageManager = PageManager::create("student.db");
+        PageManager.insert(1, "sss".as_bytes().to_vec());
+        PageManager.insert(2, "sss".as_bytes().to_vec());
+        PageManager.insert(3, "sss".as_bytes().to_vec());
+        PageManager.insert(4, "sss".as_bytes().to_vec());
+        PageManager.insert(5, "sss".as_bytes().to_vec());
+        PageManager.insert(6, "sss".as_bytes().to_vec());
+        PageManager.insert(7, "sss".as_bytes().to_vec());
+        PageManager.insert(8, "sss".as_bytes().to_vec());
+        PageManager.insert(9, "sss".as_bytes().to_vec());
+        PageManager.insert(10, "sss".as_bytes().to_vec());
+        PageManager.insert(11, "sss".as_bytes().to_vec());
+        PageManager.insert(12, "sss".as_bytes().to_vec());
+        PageManager.insert(13, "sss".as_bytes().to_vec());
+        PageManager.insert(2, "sss".as_bytes().to_vec());
+        PageManager.insert(2, "sss".as_bytes().to_vec());
+        PageManager.insert(2, "sss".as_bytes().to_vec());
+        // PageManager.insert(14, "sss");
         println!("\n==============================");
         println!(
             "root_page_id: {} max_page_id: {}",
-            filemanager.root_page_id, filemanager.max_page_id
+            PageManager.root_page_id, PageManager.max_page_id
         );
-        filemanager.show();
+        PageManager.show();
 
         // let f = OpenOptions::new().read(true).open("student.db").unwrap();
         // let mut buf = [0; 8];
@@ -1040,8 +1040,8 @@ mod test {
     fn f() {
         let mut tree = BPlusTree::new("user");
         tree.insert(1, "sss");
-        let mut db = FileManager::from_tree(&tree);
-        db.insert(2, "sss");
+        let mut db = PageManager::from_tree(&tree);
+        db.insert(2, "sss".as_bytes().to_vec());
         // db.insert(3, "sss");
         // db.insert(4, "sss");
         // db.insert(5, "sss");
@@ -1055,20 +1055,20 @@ mod test {
             tree.insert(i, "sss");
         }
         // println!("{:#?}", tree);
-        let mut db = FileManager::from_tree(&tree);
+        let mut db = PageManager::from_tree(&tree);
         // db.show();
-        db.insert(13, "a13");
-        db.insert(13, "a13");
-        db.insert(13, "a13");
-        db.insert(13, "a13");
+        db.insert(13, "a13".as_bytes().to_vec());
+        db.insert(13, "a13".as_bytes().to_vec());
+        db.insert(13, "a13".as_bytes().to_vec());
+        db.insert(13, "a13".as_bytes().to_vec());
 
-        db.insert(22, "新插入的数据");
-        db.insert(23, "a10");
-        db.insert(24, "a11");
-        db.insert(25, "a12");
-        db.insert(27, "a11");
-        db.insert(28, "a12");
-        db.insert(25, "a13");
+        db.insert(22, "新插入的数据".as_bytes().to_vec());
+        db.insert(23, "a10".as_bytes().to_vec());
+        db.insert(24, "a11".as_bytes().to_vec());
+        db.insert(25, "a12".as_bytes().to_vec());
+        db.insert(27, "a11".as_bytes().to_vec());
+        db.insert(28, "a12".as_bytes().to_vec());
+        db.insert(25, "a13".as_bytes().to_vec());
         db.show();
         let a = db.max_page_id;
         println!("{}", a);
@@ -1076,7 +1076,7 @@ mod test {
 
     #[test]
     fn e() {
-        let manager = FileManager::read_file("assets/user.db");
+        let manager = PageManager::read_file("assets/user.db");
         let page = manager.get_page(0);
         println!("{:#?}", page);
         let data = manager.select_recursive(0, 19);

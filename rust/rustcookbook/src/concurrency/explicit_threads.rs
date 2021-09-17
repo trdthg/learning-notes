@@ -191,8 +191,9 @@ pub fn spsc() {
 pub fn spsc_std() {
     use std::sync::mpsc;
     let (snd, rcv) = mpsc::channel();
+    let n_msgs = 5;
     std::thread::spawn(move || {
-        (0..5).for_each(|i| {
+        (0..n_msgs).for_each(|i| {
             snd.send(i).unwrap();
         })
     });
@@ -406,8 +407,8 @@ pub mod test {
         // find_max_test();
         // concurrency_channel();
         // concurrency_channel_std();
-        // spsc();
-        // spsc_std();
+        spsc();
+        spsc_std();
         // keep_static_globally();
 
         // walk_dir(Path::new("./sss").to_path_buf());

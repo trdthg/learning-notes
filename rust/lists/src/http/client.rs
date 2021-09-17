@@ -19,6 +19,7 @@ enum RequestState {
 struct HttpConnection {
     http_vsn: i32,
     http_vsn_str: String,
+    addr: String,
     host: String,
     port: usize,
     timeout: usize,
@@ -33,31 +34,13 @@ struct HttpConnection {
     headers: HashMap<String, String>,
 }
 
-impl Default for HttpConnection {
-    fn default() -> Self {
-        HttpConnection {
-            http_vsn: 11,
-            http_vsn_str: "HTTP/1.1".to_string(),
-            host: "0.0.0.0".to_string(),
-            port: 0,
-            timeout: 5,
-            source_address: "localhost".to_string(),
-            blocksize: 32,
-            state: RequestState::IDLE,
-            method: "GET".to_string(),
-            output: Vec::new(),
-            socket: None,
-            headers: HashMap::new(),
-        }
-    }
-}
-
 impl HttpConnection {
     pub fn new(addr: &str) -> Option<Self> {
         // let (host, port) = addr.splitn(1, ":").collect();
         let mut new_http_connection: HttpConnection = HttpConnection {
             http_vsn: 11,
             http_vsn_str: "HTTP/1.1".to_string(),
+            addr: "".to_string(),
             host: "0.0.0.0".to_string(),
             port: 0,
             timeout: 5,
@@ -69,7 +52,7 @@ impl HttpConnection {
             socket: None,
             headers: HashMap::new(),
         };
-
+        new_http_connection.addr = addr.to_owned();
         match Self::get_hostport(addr) {
             Some((host, port)) => {
                 new_http_connection.host = host;
@@ -78,10 +61,6 @@ impl HttpConnection {
             None => {
                 // return None
             }
-        }
-        match TcpStream::connect(addr) {
-            Ok(tcpstream) => new_http_connection.socket = Some(tcpstream),
-            Err(_) => return None,
         }
 
         Some(new_http_connection)
@@ -107,6 +86,9 @@ impl HttpConnection {
         headers: Option<HashMap<String, String>>,
         body: Option<String>,
     ) -> HttpResponse {
+        if let Some(headers) = headers {
+            self.headers = headers;
+        }
         match Self::putrequest(self, method, url) {
             Some(request) => {
                 self.output.push(request.as_bytes().to_vec());
@@ -160,12 +142,13 @@ impl HttpConnection {
         match self.state {
             RequestState::STARTED => {
                 self.state = RequestState::SEND;
+                self.send_output(body, encode_chunked);
             }
             _ => {}
         }
     }
 
-    pub fn send_output(&mut self, message_body: &str, encode_chunked: bool) {
+    pub fn send_output(&mut self, message_body: Option<String>, encode_chunked: bool) {
         // Send the currently buffered request and clear the buffer.
         self.output.push("".as_bytes().to_vec());
         self.output.push("".as_bytes().to_vec());
@@ -183,16 +166,17 @@ impl HttpConnection {
     }
 
     pub fn send(&mut self, data: Vec<u8>) {
-        if let Some(mut socket) = self.socket.take() {
+        if let Ok(tcpstream) = TcpStream::connect(self.addr.as_str()) {
+            self.socket = Some(tcpstream);
             for chunk in data.chunks(self.blocksize) {
-                socket.write_all(chunk);
+                self.socket.as_ref().unwrap().write_all(chunk).unwrap();
             }
         }
     }
 
     pub fn putrequest(&mut self, method: &str, url: &str) -> Option<String> {
         match self.state {
-            RequestState::IDLE => self.state = RequestState::IDLE,
+            RequestState::IDLE => self.state = RequestState::STARTED,
             _ => {}
         }
 
@@ -227,25 +211,18 @@ impl HttpConnection {
         }
     }
 
-    pub fn getresponse(&mut self) {
+    pub fn getresponse(&mut self) -> Vec<u8> {
         match self.state {
-            RequestState::SEND => {
-                match self.socket.take() {
-                    Some(socket) => {
-                        let mut buf = Vec::new();
-                        let mut reader = BufReader::new(socket);
-                        reader.read(&mut buf).unwrap();
-                        println!("{}", String::from_utf8_lossy(&buf));
-                    }
-                    None => {
-                        println!("self.socket = None");
-                    }
+            RequestState::SEND => match self.socket.as_ref() {
+                Some(mut socket) => {
+                    self.state = RequestState::IDLE;
+                    let mut buf = [0; 1024];
+                    socket.read(&mut buf).unwrap();
+                    buf.to_vec()
                 }
-                //
-            }
-            _ => {
-                println!("失去连接???")
-            }
+                None => "self.socket = None".as_bytes().to_vec(),
+            },
+            _ => "失去连接???".as_bytes().to_vec(),
         }
     }
 }
@@ -254,12 +231,42 @@ struct HttpResponse {}
 
 #[cfg(test)]
 mod test {
+    use std::{
+        collections::HashMap,
+        io::{Read, Write},
+        net::TcpStream,
+    };
+
     use super::HttpConnection;
 
     #[test]
     fn a() {
-        let mut a: HttpConnection = HttpConnection::new("localhost:3000").unwrap();
-        a.request("GET", "/", None, None);
-        let s = a.getresponse();
+        let mut a: HttpConnection = HttpConnection::new("127.0.0.1:8080").unwrap();
+        let mut headers = HashMap::new();
+        headers.insert("Content-Length".to_string(), "12".to_string());
+        a.request("GET", "/index", Some(headers), None);
+        let buf = a.getresponse();
+        println!("{}", String::from_utf8_lossy(&buf));
+    }
+
+    #[test]
+    fn b() {
+        struct A {
+            socket: Option<TcpStream>,
+        }
+        let addr = "127.0.0.1:8080";
+        let mut a = A { socket: None };
+        if let Ok(tcpstream) = TcpStream::connect(addr) {
+            a.socket = Some(tcpstream);
+        }
+        a.socket = Some(TcpStream::connect(addr).unwrap());
+        a.socket
+            .as_ref()
+            .unwrap()
+            .write("GET /index HTTP/1.1\r\n".as_bytes())
+            .unwrap();
+        let mut buf = [0; 1024];
+        a.socket.unwrap().read(&mut buf).unwrap();
+        println!("{}", String::from_utf8_lossy(&buf));
     }
 }

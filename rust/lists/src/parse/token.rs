@@ -118,6 +118,10 @@ lazy_static! {
         .map(|c| c.to_string())
         .collect();
     static ref BOUNDARYS: Vec<String> = "(),;".chars().into_iter().map(|c| c.to_string()).collect();
+    static ref ELEMTYPE: Vec<String> = vec!["int", "char", "date", "varchar", "time"]
+        .iter()
+        .map(|x| x.to_string())
+        .collect();
     static ref KEYWORDS: Vec<String> = vec![
         "select",
         "insert",
@@ -145,13 +149,8 @@ lazy_static! {
         "key",
         "by",
         "character",
-        "varchar",
-        "boolean",
-        "int",
         "decimal",
         "null",
-        "date",
-        "time",
         "not",
         "values",
         "order"
@@ -195,6 +194,7 @@ pub enum TokenType {
     Operation,
     Boundary,
     Number,
+    ELEMTYPE,
 }
 #[derive(Debug)]
 pub struct Token {
@@ -227,6 +227,8 @@ pub fn trim_to_token_stream(code: &str) -> Vec<Token> {
             vec.push(Token::new(TokenType::Boundary, word, str_offset, word_len))
         } else if KEYWORDS.contains(&word) {
             vec.push(Token::new(TokenType::KeyWord, word, str_offset, word_len))
+        } else if ELEMTYPE.contains(&word) {
+            vec.push(Token::new(TokenType::ELEMTYPE, word, str_offset, word_len))
         } else {
             vec.push(Token::new(TokenType::String, word, str_offset, word_len))
         }

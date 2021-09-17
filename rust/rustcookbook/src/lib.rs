@@ -10,6 +10,7 @@ pub mod debugging;
 pub mod encoding;
 pub mod filesystem;
 pub mod operatingsystem;
+pub mod tests;
 pub mod webprogramming;
 
 #[cfg(test)]

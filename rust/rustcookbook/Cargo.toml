@@ -79,4 +79,6 @@ regex = "1.5"
 tokio = { version = "1.11", features = ["full"] }
 select = "0.5"
 reqwest = {version = "0.11", features = ["blocking"]}
-hyper = ""
+hyper = "0.14"
+# 20 测试
+laboratory = "2.0"
