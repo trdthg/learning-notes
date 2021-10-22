@@ -5,4 +5,3 @@
 2. 各类库的使用demo
 3. 一些简单的脚本
 4. 个别工具
-git commit -s -m "fix: clean code"
