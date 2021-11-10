@@ -1,3 +1,6 @@
+*.o
+*.hi
+
 /**/target
 /**/dist
 /**/out
@@ -10,7 +13,6 @@
 /**/.idea
 /**/.vscode
 /**/paddlepaddle
-
 
 HELP.md
 target/

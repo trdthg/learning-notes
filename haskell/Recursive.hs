@@ -1,6 +1,8 @@
 
 infixr 5 :-:
 data List a = Empty | a :-: (List a) deriving (Show, Read, Ord, Eq)
+-- 或者是record syntex
+-- data Lsit = Empty | Cons {listHead :: a, listTail :: List a} deriving (Show, Read, Eq, Ord)
 
 -- infixr 5 ++
 -- (++) :: [a] -> [a] -> [a]
@@ -43,8 +45,3 @@ main = do
     let numsTree = foldr treeInsert EmptyTree nums
     print numsTree
     putStrLn "end..."
-
-
-
-
-
