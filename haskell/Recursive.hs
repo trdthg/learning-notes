@@ -32,7 +32,6 @@ treeElem x (Node a left right)
     | x < a = treeElem x left
     | x > a = treeElem x right
 
-
 main = do
     putStrLn "start..."
     let a = 3 :-: 4 :-: 5 :-: Empty
