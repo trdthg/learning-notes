@@ -37,11 +37,10 @@ main = do
     putStrLn "start..."
     let a = 3 :-: 4 :-: 5 :-: Empty
     print a
-
     let b = 6 :-: 7 :-: Empty
     print(a .++ b)
-
     let nums = [8, 6, 4, 1, 3, 5]
     let numsTree = foldr treeInsert EmptyTree nums
     print numsTree
+    print $ treeElem 4 numsTree
     putStrLn "end..."
