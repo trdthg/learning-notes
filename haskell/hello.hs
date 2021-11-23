@@ -3,6 +3,6 @@ main = do
 	-- name <- getLine
     -- putStrLn (name)
 	print hello_world
-	
-	
+
+
 
