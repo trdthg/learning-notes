@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
     printf("[INFO] listen on port %d success!\n", DEFAULT_PORT);
 
     // 客户端fd_set
+    // fd_set有最大限制，一般是1024
     fd_set clientfd_set;
     // 最大的fd号
     int maxsock;
@@ -63,13 +64,18 @@ int main(int argc, char *argv[])
     // 1. 判断是否有并建立新的客户端连接
     // 2. 检查是否有客户端连接的数据报文已经准备好，准备好就处理返回，否则continue
     for (;;) {
-        // 初始化fd到集合
+        // 将clientfd_set设为空
+        // 原因在select调用是提到
         FD_ZERO(&clientfd_set);
-        // 加入server的fd
+        // 把server的fd加入到集合
         FD_SET(serverfd, &clientfd_set);
         // 设置超时时间;
+        // 秒
         tv.tv_sec = 30;
+        // 微秒
         tv.tv_usec = 0;
+        // 如果两个值都为0,那么select就不会阻塞，o
+        // 如果不传struct_val结构体(select参数设置为null)，select会一直阻塞，直到3种fd_set有一个是就绪状态 | 调用被中断 | timeout超时
 
         // 把活动的句柄加入到文件描述符中
         for (int i = 0; i < 5; ++i) {
@@ -79,6 +85,8 @@ int main(int argc, char *argv[])
         }
 
         // select, 文件描述符的范围（最大的fd + 1），可读集合，可写集合，监视异常集合，超时时间（NULL阻塞,0非阻塞，>0先阻塞超时则直接返回）
+        // 这里的异常指的是带外数据或者
+        // select会修改集合中结构体的值，所以每次循环时都要重新使用fd_zero和fd_set去初始化
         ret = select(maxsock + 1, &clientfd_set, NULL, NULL, &tv);
         if (ret < 0) {
             perror("[ERROR] select failed!");
@@ -90,6 +98,7 @@ int main(int argc, char *argv[])
 
         // 轮询文件描述符
         for (int i = 0; i < conn_amount; ++i) {
+            // 判断在活动的fd在集合中
             if (FD_ISSET(active_clientfd_set[i], &clientfd_set)) {
                 // 判断fd是否在集合中
                 printf("[INFO] start recv from client[%d]\n", i);
