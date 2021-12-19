@@ -1,4 +1,4 @@
 import Shapes
 
 main = do
-	putStrLn "start..."
+  putStrLn "start..."
