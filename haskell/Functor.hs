@@ -1,5 +1,3 @@
-
-
 -- 看一眼fmap的定义
 -- class Functor f where
 --     fmap :: (a -> b) -> f a -> f b
@@ -24,24 +22,24 @@
 -- 在这个例子里,我们只map了Either的右值,因为不能保证Either a b的类型相同, Map.Map也是,只有value改变
 
 class Tofu t where
-    tofu :: j a -> t a j
+  tofu :: j a -> t a j
 
-data Frank a b = Frank {frankField :: b a} deriving (Show)
+newtype Frank a b = Frank {frankField :: b a} deriving (Show)
 
 instance Tofu Frank where
-    tofu x = Frank x
+  tofu x = Frank x
 
-data Barry t k p = Barry { yabba :: p, dabba :: t k }
+data Barry t k p = Barry {yabba :: p, dabba :: t k}
 
 instance Functor (Barry a b) where
-    fmap f (Barry { yabba = x, dabba = y }) = Barry {yabba = f x, dabba = y }
+  fmap f Barry {yabba = x, dabba = y} = Barry {yabba = f x, dabba = y}
 
 main :: IO ()
 main = do
-    let a = Frank { frankField = Just 'c' }
-    print a
-    let b = tofu (Just 'a') :: Frank Char Maybe
-    print b
-    let c = tofu ["Hello"] :: Frank [Char] []
-    print c
-    putStrLn "start..."
+  let a = Frank {frankField = Just 'c'}
+  print a
+  let b = tofu (Just 'a') :: Frank Char Maybe
+  print b
+  let c = tofu ["Hello"] :: Frank [Char] []
+  print c
+  putStrLn "start..."

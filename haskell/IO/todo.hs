@@ -1,39 +1,43 @@
-    import System.Environment
-    import System.Directory
-    import System.IO
-    import Data.List
+import Data.List
+import System.Directory
+import System.Environment
+import System.IO
 
-    dispatch :: [(String, [String] -> IO ())]
-    dispatch =  [ ("add", add)
-                , ("view", view)
-                , ("remove", remove)
-                ]
+dispatch :: [(String, [String] -> IO ())]
+dispatch =
+  [ ("add", add),
+    ("view", view),
+    ("remove", remove)
+  ]
 
-    main = do
-        (command:args) <- getArgs
-        let (Just action) = lookup command dispatch
-        action args
+main = do
+  (command : args) <- getArgs
+  let (Just action) = lookup command dispatch
+  action args
 
-    add :: [String] -> IO ()
-    add [fileName, todoItem] = appendFile fileName (todoItem ++ "\n")
+add :: [String] -> IO ()
+add [fileName, todoItem] = appendFile fileName (todoItem ++ "\n")
+add _ = putStrLn "Plz input [filename, todoItem]"
 
-    view :: [String] -> IO ()
-    view [fileName] = do
-        contents <- readFile fileName
-        let todoTasks = lines contents
-            numberedTasks = zipWith (\n line -> show n ++ " - " ++ line) [0..] todoTasks
-        putStr $ unlines numberedTasks
+view :: [String] -> IO ()
+view [fileName] = do
+  contents <- readFile fileName
+  let todoTasks = lines contents
+      numberedTasks = zipWith (\n line -> show n ++ " - " ++ line) [0 ..] todoTasks
+  putStr $ unlines numberedTasks
+view _ = putStrLn "Plz input [filename]"
 
-    remove :: [String] -> IO ()
-    remove [fileName, numberString] = do
-        handle <- openFile fileName ReadMode
-        (tempName, tempHandle) <- openTempFile "." "temp"
-        contents <- hGetContents handle
-        let number = read numberString
-            todoTasks = lines contents
-            newTodoItems = delete (todoTasks !! number) todoTasks
-        hPutStr tempHandle $ unlines newTodoItems
-        hClose handle
-        hClose tempHandle
-        removeFile fileName
-        renameFile tempName fileName
+remove :: [String] -> IO ()
+remove [fileName, numberString] = do
+  handle <- openFile fileName ReadMode
+  (tempName, tempHandle) <- openTempFile "." "temp"
+  contents <- hGetContents handle
+  let number = read numberString
+      todoTasks = lines contents
+      newTodoItems = delete (todoTasks !! number) todoTasks
+  hPutStr tempHandle $ unlines newTodoItems
+  hClose handle
+  hClose tempHandle
+  removeFile fileName
+  renameFile tempName fileName
+remove _ = putStrLn "Plz input [filename, numberString]"

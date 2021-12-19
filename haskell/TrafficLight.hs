@@ -1,4 +1,3 @@
-
 -- class Eqa a where
 --     (==) :: a -> a -> Bool
 --     (/=) :: a -> a -> Bool
@@ -8,18 +7,17 @@
 data TrafficLight = Red | Yellow | Green
 
 instance Eq TrafficLight where
-    Red == Red = True
-    Yellow == Yellow = True
-    Green == Green = True
-    _ == _ = False
+  Red == Red = True
+  Yellow == Yellow = True
+  Green == Green = True
+  _ == _ = False
 
 instance Show TrafficLight where
-    show Red = "Red light"
-    show Yellow = "Yellow light"
-    show Green = "Green light"
-
+  show Red = "Red light"
+  show Yellow = "Yellow light"
+  show Green = "Green light"
 
 main = do
-    putStrLn "start..."
-    print $ Red == Red
-    print $ show [Red, Yellow, Green]
+  putStrLn "start..."
+  print $ Red == Red
+  print $ show [Red, Yellow, Green]
