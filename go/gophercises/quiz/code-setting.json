@@ -1,0 +1,16 @@
+{
+  "window.titleBarStyle": "custom",
+  "editor.fontFamily": "'monaco', 'Droid Sans Mono', 'monospace', monospace, 'Droid Sans Fallback'",
+  "editor.fontSize": 13,
+  "terminal.integrated.fontFamily": "'monaco'",
+  "debug.console.fontSize": 10,
+  "terminal.integrated.fontSize": 12,
+  "eslint.format.enable": true,
+  "files.trimTrailingWhitespace": true,
+  "files.trimFinalNewlines": true,
+  "editor.suggestSelection": "first",
+  "workbench.iconTheme": "material-icon-theme",
+  "window.zoomLevel": -1,
+  "editor.bracketPairColorization.enabled": true,
+  "go.autocompleteUnimportedPackages": true
+}
