@@ -7,7 +7,7 @@ use hyper::service;
 #[tokio::main]
 async fn main() {
     // hello().await;
-    
+
     let addr = ([127, 0, 0, 1], 3000).into();
     let make_svc = service::make_service_fn(|_conn| async {
         Ok::<_, hyper::Error>(service::service_fn(routing))
@@ -69,13 +69,13 @@ async fn routing(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
         (&Method::POST, "/echo/reverse") => {
             // Await the full body to be concatenated into a single `Bytes`...
             let full_body = hyper::body::to_bytes(req.into_body()).await?;
-        
+
             // Iterate the full body in reverse order and collect into a new Vec.
             let reversed = full_body.iter()
                 .rev()
                 .cloned()
                 .collect::<Vec<u8>>();
-        
+
             *response.body_mut() = reversed.into();
         },
         _ => {
