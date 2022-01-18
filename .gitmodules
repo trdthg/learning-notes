@@ -1,0 +1,3 @@
+[submodule "stress-test/FlameGraph"]
+	path = stress-test/FlameGraph
+	url = https://github.com/brendangregg/FlameGraph.git

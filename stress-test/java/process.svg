@@ -1,0 +1,680 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" width="1200" height="422" onload="init(evt)" viewBox="0 0 1200 422" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<!-- Flame graph stack visualization. See https://github.com/brendangregg/FlameGraph for latest version, and http://www.brendangregg.com/flamegraphs.html for examples. -->
+<!-- NOTES:  -->
+<defs>
+	<linearGradient id="background" y1="0" y2="1" x1="0" x2="0" >
+		<stop stop-color="#eeeeee" offset="5%" />
+		<stop stop-color="#eeeeb0" offset="95%" />
+	</linearGradient>
+</defs>
+<style type="text/css">
+	text { font-family:Verdana; font-size:12px; fill:rgb(0,0,0); }
+	#search, #ignorecase { opacity:0.1; cursor:pointer; }
+	#search:hover, #search.show, #ignorecase:hover, #ignorecase.show { opacity:1; }
+	#subtitle { text-anchor:middle; font-color:rgb(160,160,160); }
+	#title { text-anchor:middle; font-size:17px}
+	#unzoom { cursor:pointer; }
+	#frames > *:hover { stroke:black; stroke-width:0.5; cursor:pointer; }
+	.hide { display:none; }
+	.parent { opacity:0.5; }
+</style>
+<script type="text/ecmascript">
+<![CDATA[
+	"use strict";
+	var details, searchbtn, unzoombtn, matchedtxt, svg, searching, currentSearchTerm, ignorecase, ignorecaseBtn;
+	function init(evt) {
+		details = document.getElementById("details").firstChild;
+		searchbtn = document.getElementById("search");
+		ignorecaseBtn = document.getElementById("ignorecase");
+		unzoombtn = document.getElementById("unzoom");
+		matchedtxt = document.getElementById("matched");
+		svg = document.getElementsByTagName("svg")[0];
+		searching = 0;
+		currentSearchTerm = null;
+
+		// use GET parameters to restore a flamegraphs state.
+		var params = get_params();
+		if (params.x && params.y)
+			zoom(find_group(document.querySelector('[x="' + params.x + '"][y="' + params.y + '"]')));
+                if (params.s) search(params.s);
+	}
+
+	// event listeners
+	window.addEventListener("click", function(e) {
+		var target = find_group(e.target);
+		if (target) {
+			if (target.nodeName == "a") {
+				if (e.ctrlKey === false) return;
+				e.preventDefault();
+			}
+			if (target.classList.contains("parent")) unzoom();
+			zoom(target);
+			if (!document.querySelector('.parent')) {
+				clearzoom();
+				return;
+			}
+
+			// set parameters for zoom state
+			var el = target.querySelector("rect");
+			if (el && el.attributes && el.attributes.y && el.attributes._orig_x) {
+				var params = get_params()
+				params.x = el.attributes._orig_x.value;
+				params.y = el.attributes.y.value;
+				history.replaceState(null, null, parse_params(params));
+			}
+		}
+		else if (e.target.id == "unzoom") clearzoom();
+		else if (e.target.id == "search") search_prompt();
+		else if (e.target.id == "ignorecase") toggle_ignorecase();
+	}, false)
+
+	// mouse-over for info
+	// show
+	window.addEventListener("mouseover", function(e) {
+		var target = find_group(e.target);
+		if (target) details.nodeValue = "Function: " + g_to_text(target);
+	}, false)
+
+	// clear
+	window.addEventListener("mouseout", function(e) {
+		var target = find_group(e.target);
+		if (target) details.nodeValue = ' ';
+	}, false)
+
+	// ctrl-F for search
+	// ctrl-I to toggle case-sensitive search
+	window.addEventListener("keydown",function (e) {
+		if (e.keyCode === 114 || (e.ctrlKey && e.keyCode === 70)) {
+			e.preventDefault();
+			search_prompt();
+		}
+		else if (e.ctrlKey && e.keyCode === 73) {
+			e.preventDefault();
+			toggle_ignorecase();
+		}
+	}, false)
+
+	// functions
+	function get_params() {
+		var params = {};
+		var paramsarr = window.location.search.substr(1).split('&');
+		for (var i = 0; i < paramsarr.length; ++i) {
+			var tmp = paramsarr[i].split("=");
+			if (!tmp[0] || !tmp[1]) continue;
+			params[tmp[0]]  = decodeURIComponent(tmp[1]);
+		}
+		return params;
+	}
+	function parse_params(params) {
+		var uri = "?";
+		for (var key in params) {
+			uri += key + '=' + encodeURIComponent(params[key]) + '&';
+		}
+		if (uri.slice(-1) == "&")
+			uri = uri.substring(0, uri.length - 1);
+		if (uri == '?')
+			uri = window.location.href.split('?')[0];
+		return uri;
+	}
+	function find_child(node, selector) {
+		var children = node.querySelectorAll(selector);
+		if (children.length) return children[0];
+	}
+	function find_group(node) {
+		var parent = node.parentElement;
+		if (!parent) return;
+		if (parent.id == "frames") return node;
+		return find_group(parent);
+	}
+	function orig_save(e, attr, val) {
+		if (e.attributes["_orig_" + attr] != undefined) return;
+		if (e.attributes[attr] == undefined) return;
+		if (val == undefined) val = e.attributes[attr].value;
+		e.setAttribute("_orig_" + attr, val);
+	}
+	function orig_load(e, attr) {
+		if (e.attributes["_orig_"+attr] == undefined) return;
+		e.attributes[attr].value = e.attributes["_orig_" + attr].value;
+		e.removeAttribute("_orig_"+attr);
+	}
+	function g_to_text(e) {
+		var text = find_child(e, "title").firstChild.nodeValue;
+		return (text)
+	}
+	function g_to_func(e) {
+		var func = g_to_text(e);
+		// if there's any manipulation we want to do to the function
+		// name before it's searched, do it here before returning.
+		return (func);
+	}
+	function update_text(e) {
+		var r = find_child(e, "rect");
+		var t = find_child(e, "text");
+		var w = parseFloat(r.attributes.width.value) -3;
+		var txt = find_child(e, "title").textContent.replace(/\([^(]*\)$/,"");
+		t.attributes.x.value = parseFloat(r.attributes.x.value) + 3;
+
+		// Smaller than this size won't fit anything
+		if (w < 2 * 12 * 0.59) {
+			t.textContent = "";
+			return;
+		}
+
+		t.textContent = txt;
+		// Fit in full text width
+		if (/^ *$/.test(txt) || t.getSubStringLength(0, txt.length) < w)
+			return;
+
+		for (var x = txt.length - 2; x > 0; x--) {
+			if (t.getSubStringLength(0, x + 2) <= w) {
+				t.textContent = txt.substring(0, x) + "..";
+				return;
+			}
+		}
+		t.textContent = "";
+	}
+
+	// zoom
+	function zoom_reset(e) {
+		if (e.attributes != undefined) {
+			orig_load(e, "x");
+			orig_load(e, "width");
+		}
+		if (e.childNodes == undefined) return;
+		for (var i = 0, c = e.childNodes; i < c.length; i++) {
+			zoom_reset(c[i]);
+		}
+	}
+	function zoom_child(e, x, ratio) {
+		if (e.attributes != undefined) {
+			if (e.attributes.x != undefined) {
+				orig_save(e, "x");
+				e.attributes.x.value = (parseFloat(e.attributes.x.value) - x - 10) * ratio + 10;
+				if (e.tagName == "text")
+					e.attributes.x.value = find_child(e.parentNode, "rect[x]").attributes.x.value + 3;
+			}
+			if (e.attributes.width != undefined) {
+				orig_save(e, "width");
+				e.attributes.width.value = parseFloat(e.attributes.width.value) * ratio;
+			}
+		}
+
+		if (e.childNodes == undefined) return;
+		for (var i = 0, c = e.childNodes; i < c.length; i++) {
+			zoom_child(c[i], x - 10, ratio);
+		}
+	}
+	function zoom_parent(e) {
+		if (e.attributes) {
+			if (e.attributes.x != undefined) {
+				orig_save(e, "x");
+				e.attributes.x.value = 10;
+			}
+			if (e.attributes.width != undefined) {
+				orig_save(e, "width");
+				e.attributes.width.value = parseInt(svg.width.baseVal.value) - (10 * 2);
+			}
+		}
+		if (e.childNodes == undefined) return;
+		for (var i = 0, c = e.childNodes; i < c.length; i++) {
+			zoom_parent(c[i]);
+		}
+	}
+	function zoom(node) {
+		var attr = find_child(node, "rect").attributes;
+		var width = parseFloat(attr.width.value);
+		var xmin = parseFloat(attr.x.value);
+		var xmax = parseFloat(xmin + width);
+		var ymin = parseFloat(attr.y.value);
+		var ratio = (svg.width.baseVal.value - 2 * 10) / width;
+
+		// XXX: Workaround for JavaScript float issues (fix me)
+		var fudge = 0.0001;
+
+		unzoombtn.classList.remove("hide");
+
+		var el = document.getElementById("frames").children;
+		for (var i = 0; i < el.length; i++) {
+			var e = el[i];
+			var a = find_child(e, "rect").attributes;
+			var ex = parseFloat(a.x.value);
+			var ew = parseFloat(a.width.value);
+			var upstack;
+			// Is it an ancestor
+			if (0 == 0) {
+				upstack = parseFloat(a.y.value) > ymin;
+			} else {
+				upstack = parseFloat(a.y.value) < ymin;
+			}
+			if (upstack) {
+				// Direct ancestor
+				if (ex <= xmin && (ex+ew+fudge) >= xmax) {
+					e.classList.add("parent");
+					zoom_parent(e);
+					update_text(e);
+				}
+				// not in current path
+				else
+					e.classList.add("hide");
+			}
+			// Children maybe
+			else {
+				// no common path
+				if (ex < xmin || ex + fudge >= xmax) {
+					e.classList.add("hide");
+				}
+				else {
+					zoom_child(e, xmin, ratio);
+					update_text(e);
+				}
+			}
+		}
+		search();
+	}
+	function unzoom() {
+		unzoombtn.classList.add("hide");
+		var el = document.getElementById("frames").children;
+		for(var i = 0; i < el.length; i++) {
+			el[i].classList.remove("parent");
+			el[i].classList.remove("hide");
+			zoom_reset(el[i]);
+			update_text(el[i]);
+		}
+		search();
+	}
+	function clearzoom() {
+		unzoom();
+
+		// remove zoom state
+		var params = get_params();
+		if (params.x) delete params.x;
+		if (params.y) delete params.y;
+		history.replaceState(null, null, parse_params(params));
+	}
+
+	// search
+	function toggle_ignorecase() {
+		ignorecase = !ignorecase;
+		if (ignorecase) {
+			ignorecaseBtn.classList.add("show");
+		} else {
+			ignorecaseBtn.classList.remove("show");
+		}
+		reset_search();
+		search();
+	}
+	function reset_search() {
+		var el = document.querySelectorAll("#frames rect");
+		for (var i = 0; i < el.length; i++) {
+			orig_load(el[i], "fill")
+		}
+		var params = get_params();
+		delete params.s;
+		history.replaceState(null, null, parse_params(params));
+	}
+	function search_prompt() {
+		if (!searching) {
+			var term = prompt("Enter a search term (regexp " +
+			    "allowed, eg: ^ext4_)"
+			    + (ignorecase ? ", ignoring case" : "")
+			    + "\nPress Ctrl-i to toggle case sensitivity", "");
+			if (term != null) search(term);
+		} else {
+			reset_search();
+			searching = 0;
+			currentSearchTerm = null;
+			searchbtn.classList.remove("show");
+			searchbtn.firstChild.nodeValue = "Search"
+			matchedtxt.classList.add("hide");
+			matchedtxt.firstChild.nodeValue = ""
+		}
+	}
+	function search(term) {
+		if (term) currentSearchTerm = term;
+
+		var re = new RegExp(currentSearchTerm, ignorecase ? 'i' : '');
+		var el = document.getElementById("frames").children;
+		var matches = new Object();
+		var maxwidth = 0;
+		for (var i = 0; i < el.length; i++) {
+			var e = el[i];
+			var func = g_to_func(e);
+			var rect = find_child(e, "rect");
+			if (func == null || rect == null)
+				continue;
+
+			// Save max width. Only works as we have a root frame
+			var w = parseFloat(rect.attributes.width.value);
+			if (w > maxwidth)
+				maxwidth = w;
+
+			if (func.match(re)) {
+				// highlight
+				var x = parseFloat(rect.attributes.x.value);
+				orig_save(rect, "fill");
+				rect.attributes.fill.value = "rgb(230,0,230)";
+
+				// remember matches
+				if (matches[x] == undefined) {
+					matches[x] = w;
+				} else {
+					if (w > matches[x]) {
+						// overwrite with parent
+						matches[x] = w;
+					}
+				}
+				searching = 1;
+			}
+		}
+		if (!searching)
+			return;
+		var params = get_params();
+		params.s = currentSearchTerm;
+		history.replaceState(null, null, parse_params(params));
+
+		searchbtn.classList.add("show");
+		searchbtn.firstChild.nodeValue = "Reset Search";
+
+		// calculate percent matched, excluding vertical overlap
+		var count = 0;
+		var lastx = -1;
+		var lastw = 0;
+		var keys = Array();
+		for (k in matches) {
+			if (matches.hasOwnProperty(k))
+				keys.push(k);
+		}
+		// sort the matched frames by their x location
+		// ascending, then width descending
+		keys.sort(function(a, b){
+			return a - b;
+		});
+		// Step through frames saving only the biggest bottom-up frames
+		// thanks to the sort order. This relies on the tree property
+		// where children are always smaller than their parents.
+		var fudge = 0.0001;	// JavaScript floating point
+		for (var k in keys) {
+			var x = parseFloat(keys[k]);
+			var w = matches[keys[k]];
+			if (x >= lastx + lastw - fudge) {
+				count += w;
+				lastx = x;
+				lastw = w;
+			}
+		}
+		// display matched percent
+		matchedtxt.classList.remove("hide");
+		var pct = 100 * count / maxwidth;
+		if (pct != 100) pct = pct.toFixed(1)
+		matchedtxt.firstChild.nodeValue = "Matched: " + pct + "%";
+	}
+]]>
+</script>
+<rect x="0.0" y="0" width="1200.0" height="422.0" fill="url(#background)"  />
+<text id="title" x="600.00" y="24" >Flame Graph</text>
+<text id="details" x="10.00" y="405" > </text>
+<text id="unzoom" x="10.00" y="24" class="hide">Reset Zoom</text>
+<text id="search" x="1090.00" y="24" >Search</text>
+<text id="ignorecase" x="1174.00" y="24" >ic</text>
+<text id="matched" x="1090.00" y="405" > </text>
+<g id="frames">
+<g >
+<title>/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so (14 samples, 0.86%)</title><rect x="1099.7" y="165" width="10.2" height="15.0" fill="rgb(243,113,113)" rx="2" ry="2" />
+<text  x="1102.68" y="175.5" ></text>
+</g>
+<g >
+<title>com/sun/tools/javac/launcher/Main.execute (1,613 samples, 99.57%)</title><rect x="10.0" y="325" width="1174.9" height="15.0" fill="rgb(93,239,93)" rx="2" ry="2" />
+<text  x="13.00" y="335.5" >com/sun/tools/javac/launcher/Main.execute</text>
+</g>
+<g >
+<title>[unknown] (23 samples, 1.42%)</title><rect x="1109.9" y="165" width="16.7" height="15.0" fill="rgb(226,89,89)" rx="2" ry="2" />
+<text  x="1112.88" y="175.5" ></text>
+</g>
+<g >
+<title>Target.main (1,613 samples, 99.57%)</title><rect x="10.0" y="245" width="1174.9" height="15.0" fill="rgb(216,74,74)" rx="2" ry="2" />
+<text  x="13.00" y="255.5" >Target.main</text>
+</g>
+<g >
+<title>jdk/internal/reflect/NativeMethodAccessorImpl.invoke0 (1,613 samples, 99.57%)</title><rect x="10.0" y="261" width="1174.9" height="15.0" fill="rgb(84,231,84)" rx="2" ry="2" />
+<text  x="13.00" y="271.5" >jdk/internal/reflect/NativeMethodAccessorImpl.invoke0</text>
+</g>
+<g >
+<title>/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so (2 samples, 0.12%)</title><rect x="1096.8" y="101" width="1.4" height="15.0" fill="rgb(210,65,65)" rx="2" ry="2" />
+<text  x="1099.77" y="111.5" ></text>
+</g>
+<g >
+<title>__memset_avx2_unaligned_erms (1 samples, 0.06%)</title><rect x="991.1" y="53" width="0.8" height="15.0" fill="rgb(242,111,111)" rx="2" ry="2" />
+<text  x="994.15" y="63.5" ></text>
+</g>
+<g >
+<title>opendir_tail (1 samples, 0.06%)</title><rect x="1150.7" y="165" width="0.7" height="15.0" fill="rgb(233,98,98)" rx="2" ry="2" />
+<text  x="1153.67" y="175.5" ></text>
+</g>
+<g >
+<title>/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so (4 samples, 0.25%)</title><rect x="1095.3" y="117" width="2.9" height="15.0" fill="rgb(252,126,126)" rx="2" ry="2" />
+<text  x="1098.31" y="127.5" ></text>
+</g>
+<g >
+<title>__readdir64 (10 samples, 0.62%)</title><rect x="1114.2" y="149" width="7.3" height="15.0" fill="rgb(207,60,60)" rx="2" ry="2" />
+<text  x="1117.25" y="159.5" ></text>
+</g>
+<g >
+<title>__memset_avx2_unaligned (5 samples, 0.31%)</title><rect x="991.9" y="69" width="3.6" height="15.0" fill="rgb(237,104,104)" rx="2" ry="2" />
+<text  x="994.88" y="79.5" ></text>
+</g>
+<g >
+<title>__GI___open_nocancel (2 samples, 0.12%)</title><rect x="1126.6" y="165" width="1.5" height="15.0" fill="rgb(228,91,91)" rx="2" ry="2" />
+<text  x="1129.63" y="175.5" ></text>
+</g>
+<g >
+<title>com/sun/tools/javac/launcher/Main.run (1,613 samples, 99.57%)</title><rect x="10.0" y="341" width="1174.9" height="15.0" fill="rgb(66,214,66)" rx="2" ry="2" />
+<text  x="13.00" y="351.5" >com/sun/tools/javac/launcher/Main.run</text>
+</g>
+<g >
+<title>_int_malloc (4 samples, 0.25%)</title><rect x="1121.5" y="149" width="2.9" height="15.0" fill="rgb(228,91,91)" rx="2" ry="2" />
+<text  x="1124.53" y="159.5" ></text>
+</g>
+<g >
+<title>java/lang/String.indexOf (1 samples, 0.06%)</title><rect x="573.8" y="165" width="0.7" height="15.0" fill="rgb(102,248,102)" rx="2" ry="2" />
+<text  x="576.78" y="175.5" ></text>
+</g>
+<g >
+<title>java/io/File.list (794 samples, 49.01%)</title><rect x="573.0" y="213" width="578.4" height="15.0" fill="rgb(102,248,102)" rx="2" ry="2" />
+<text  x="576.05" y="223.5" >java/io/File.list</text>
+</g>
+<g >
+<title>/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so (1 samples, 0.06%)</title><rect x="989.7" y="37" width="0.7" height="15.0" fill="rgb(214,71,71)" rx="2" ry="2" />
+<text  x="992.69" y="47.5" ></text>
+</g>
+<g >
+<title>jdk/internal/reflect/NativeMethodAccessorImpl.invoke (1,613 samples, 99.57%)</title><rect x="10.0" y="277" width="1174.9" height="15.0" fill="rgb(56,205,56)" rx="2" ry="2" />
+<text  x="13.00" y="287.5" >jdk/internal/reflect/NativeMethodAccessorImpl.invoke</text>
+</g>
+<g >
+<title>jdk/internal/reflect/DelegatingMethodAccessorImpl.invoke (1,613 samples, 99.57%)</title><rect x="10.0" y="293" width="1174.9" height="15.0" fill="rgb(100,245,100)" rx="2" ry="2" />
+<text  x="13.00" y="303.5" >jdk/internal/reflect/DelegatingMethodAccessorImpl.invoke</text>
+</g>
+<g >
+<title>java/lang/String.hashCode (46 samples, 2.84%)</title><rect x="1151.4" y="213" width="33.5" height="15.0" fill="rgb(68,217,68)" rx="2" ry="2" />
+<text  x="1154.40" y="223.5" >ja..</text>
+</g>
+<g >
+<title>Target.method1 (379 samples, 23.40%)</title><rect x="10.0" y="229" width="276.1" height="15.0" fill="rgb(203,54,54)" rx="2" ry="2" />
+<text  x="13.00" y="239.5" >Target.method1</text>
+</g>
+<g >
+<title>all (1,620 samples, 100%)</title><rect x="10.0" y="373" width="1180.0" height="15.0" fill="rgb(225,86,86)" rx="2" ry="2" />
+<text  x="13.00" y="383.5" ></text>
+</g>
+<g >
+<title>__memset_avx2_unaligned (1 samples, 0.06%)</title><rect x="990.4" y="53" width="0.7" height="15.0" fill="rgb(243,113,113)" rx="2" ry="2" />
+<text  x="993.42" y="63.5" ></text>
+</g>
+<g >
+<title>/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so (41 samples, 2.53%)</title><rect x="962.0" y="69" width="29.9" height="15.0" fill="rgb(217,74,74)" rx="2" ry="2" />
+<text  x="965.01" y="79.5" >/u..</text>
+</g>
+<g >
+<title>java/lang/StringLatin1.indexOf (1 samples, 0.06%)</title><rect x="573.8" y="133" width="0.7" height="15.0" fill="rgb(85,232,85)" rx="2" ry="2" />
+<text  x="576.78" y="143.5" ></text>
+</g>
+<g >
+<title>java/lang/String.indexOf (1 samples, 0.06%)</title><rect x="573.8" y="149" width="0.7" height="15.0" fill="rgb(51,201,51)" rx="2" ry="2" />
+<text  x="576.78" y="159.5" ></text>
+</g>
+<g >
+<title>__getdents (6 samples, 0.37%)</title><rect x="1109.9" y="149" width="4.3" height="15.0" fill="rgb(234,99,99)" rx="2" ry="2" />
+<text  x="1112.88" y="159.5" ></text>
+</g>
+<g >
+<title>Target.method2 (380 samples, 23.46%)</title><rect x="286.1" y="229" width="276.8" height="15.0" fill="rgb(214,70,70)" rx="2" ry="2" />
+<text  x="289.06" y="239.5" >Target.method2</text>
+</g>
+<g >
+<title>/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so (411 samples, 25.37%)</title><rect x="707.8" y="117" width="299.4" height="15.0" fill="rgb(223,84,84)" rx="2" ry="2" />
+<text  x="710.80" y="127.5" >/usr/lib/jvm/java-11-openjdk/lib/server/..</text>
+</g>
+<g >
+<title>com/sun/tools/javac/launcher/Main.main (1,613 samples, 99.57%)</title><rect x="10.0" y="357" width="1174.9" height="15.0" fill="rgb(53,202,53)" rx="2" ry="2" />
+<text  x="13.00" y="367.5" >com/sun/tools/javac/launcher/Main.main</text>
+</g>
+<g >
+<title>/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so (7 samples, 0.43%)</title><rect x="1184.9" y="277" width="5.1" height="15.0" fill="rgb(250,124,124)" rx="2" ry="2" />
+<text  x="1187.90" y="287.5" ></text>
+</g>
+<g >
+<title>/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so (7 samples, 0.43%)</title><rect x="1184.9" y="309" width="5.1" height="15.0" fill="rgb(220,80,80)" rx="2" ry="2" />
+<text  x="1187.90" y="319.5" ></text>
+</g>
+<g >
+<title>__tls_get_addr (1 samples, 0.06%)</title><rect x="1098.2" y="117" width="0.8" height="15.0" fill="rgb(222,83,83)" rx="2" ry="2" />
+<text  x="1101.22" y="127.5" ></text>
+</g>
+<g >
+<title>/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so (50 samples, 3.09%)</title><rect x="1062.5" y="133" width="36.5" height="15.0" fill="rgb(200,50,50)" rx="2" ry="2" />
+<text  x="1065.53" y="143.5" >/us..</text>
+</g>
+<g >
+<title>/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so (530 samples, 32.72%)</title><rect x="621.1" y="133" width="386.1" height="15.0" fill="rgb(232,97,97)" rx="2" ry="2" />
+<text  x="624.12" y="143.5" >/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so</text>
+</g>
+<g >
+<title>start_thread (7 samples, 0.43%)</title><rect x="1184.9" y="357" width="5.1" height="15.0" fill="rgb(235,101,101)" rx="2" ry="2" />
+<text  x="1187.90" y="367.5" ></text>
+</g>
+<g >
+<title>unlink_chunk.constprop.0 (3 samples, 0.19%)</title><rect x="1124.4" y="149" width="2.2" height="15.0" fill="rgb(253,128,128)" rx="2" ry="2" />
+<text  x="1127.44" y="159.5" ></text>
+</g>
+<g >
+<title>__close_nocancel (3 samples, 0.19%)</title><rect x="1128.1" y="165" width="2.2" height="15.0" fill="rgb(218,76,76)" rx="2" ry="2" />
+<text  x="1131.09" y="175.5" ></text>
+</g>
+<g >
+<title>Target.method3 (854 samples, 52.72%)</title><rect x="562.9" y="229" width="622.0" height="15.0" fill="rgb(252,125,125)" rx="2" ry="2" />
+<text  x="565.85" y="239.5" >Target.method3</text>
+</g>
+<g >
+<title>/usr/lib/jvm/java-11-openjdk/lib/libjava.so (720 samples, 44.44%)</title><rect x="575.2" y="165" width="524.5" height="15.0" fill="rgb(252,127,127)" rx="2" ry="2" />
+<text  x="578.23" y="175.5" >/usr/lib/jvm/java-11-openjdk/lib/libjava.so</text>
+</g>
+<g >
+<title>__tls_get_addr (8 samples, 0.49%)</title><rect x="996.2" y="69" width="5.9" height="15.0" fill="rgb(228,90,90)" rx="2" ry="2" />
+<text  x="999.25" y="79.5" ></text>
+</g>
+<g >
+<title>__fstatat (4 samples, 0.25%)</title><rect x="1130.3" y="165" width="2.9" height="15.0" fill="rgb(230,94,94)" rx="2" ry="2" />
+<text  x="1133.27" y="175.5" ></text>
+</g>
+<g >
+<title>java/lang/reflect/Method.invoke (1,613 samples, 99.57%)</title><rect x="10.0" y="309" width="1174.9" height="15.0" fill="rgb(106,251,106)" rx="2" ry="2" />
+<text  x="13.00" y="319.5" >java/lang/reflect/Method.invoke</text>
+</g>
+<g >
+<title>__memset_avx2_unaligned_erms (1 samples, 0.06%)</title><rect x="995.5" y="69" width="0.7" height="15.0" fill="rgb(221,81,81)" rx="2" ry="2" />
+<text  x="998.52" y="79.5" ></text>
+</g>
+<g >
+<title>opendir (2 samples, 0.12%)</title><rect x="1149.2" y="165" width="1.5" height="15.0" fill="rgb(207,60,60)" rx="2" ry="2" />
+<text  x="1152.21" y="175.5" ></text>
+</g>
+<g >
+<title>/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so (7 samples, 0.43%)</title><rect x="1184.9" y="261" width="5.1" height="15.0" fill="rgb(243,112,112)" rx="2" ry="2" />
+<text  x="1187.90" y="271.5" ></text>
+</g>
+<g >
+<title>__libc_free (1 samples, 0.06%)</title><rect x="1133.2" y="165" width="0.7" height="15.0" fill="rgb(232,96,96)" rx="2" ry="2" />
+<text  x="1136.19" y="175.5" ></text>
+</g>
+<g >
+<title>java/io/UnixFileSystem.list (792 samples, 48.89%)</title><rect x="574.5" y="181" width="576.9" height="15.0" fill="rgb(86,233,86)" rx="2" ry="2" />
+<text  x="577.51" y="191.5" >java/io/UnixFileSystem.list</text>
+</g>
+<g >
+<title>_int_free (1 samples, 0.06%)</title><rect x="1148.5" y="165" width="0.7" height="15.0" fill="rgb(218,77,77)" rx="2" ry="2" />
+<text  x="1151.48" y="175.5" ></text>
+</g>
+<g >
+<title>/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so (7 samples, 0.43%)</title><rect x="1184.9" y="293" width="5.1" height="15.0" fill="rgb(249,121,121)" rx="2" ry="2" />
+<text  x="1187.90" y="303.5" ></text>
+</g>
+<g >
+<title>__readdir64 (16 samples, 0.99%)</title><rect x="1136.8" y="165" width="11.7" height="15.0" fill="rgb(248,120,120)" rx="2" ry="2" />
+<text  x="1139.83" y="175.5" ></text>
+</g>
+<g >
+<title>java/io/File.isInvalid (2 samples, 0.12%)</title><rect x="573.0" y="181" width="1.5" height="15.0" fill="rgb(55,205,55)" rx="2" ry="2" />
+<text  x="576.05" y="191.5" ></text>
+</g>
+<g >
+<title>/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so (7 samples, 0.43%)</title><rect x="1184.9" y="325" width="5.1" height="15.0" fill="rgb(216,73,73)" rx="2" ry="2" />
+<text  x="1187.90" y="335.5" ></text>
+</g>
+<g >
+<title>/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so (86 samples, 5.31%)</title><rect x="939.4" y="85" width="62.7" height="15.0" fill="rgb(211,67,67)" rx="2" ry="2" />
+<text  x="942.43" y="95.5" >/usr/l..</text>
+</g>
+<g >
+<title>__libc_malloc (4 samples, 0.25%)</title><rect x="1133.9" y="165" width="2.9" height="15.0" fill="rgb(207,61,61)" rx="2" ry="2" />
+<text  x="1136.91" y="175.5" ></text>
+</g>
+<g >
+<title>__tls_get_addr (7 samples, 0.43%)</title><rect x="1002.1" y="85" width="5.1" height="15.0" fill="rgb(230,94,94)" rx="2" ry="2" />
+<text  x="1005.07" y="95.5" ></text>
+</g>
+<g >
+<title>__libc_malloc (1 samples, 0.06%)</title><rect x="1099.0" y="149" width="0.7" height="15.0" fill="rgb(239,106,106)" rx="2" ry="2" />
+<text  x="1101.95" y="159.5" ></text>
+</g>
+<g >
+<title>java/io/File.normalizedList (794 samples, 49.01%)</title><rect x="573.0" y="197" width="578.4" height="15.0" fill="rgb(72,221,72)" rx="2" ry="2" />
+<text  x="576.05" y="207.5" >java/io/File.normalizedList</text>
+</g>
+<g >
+<title>/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so (123 samples, 7.59%)</title><rect x="917.6" y="101" width="89.6" height="15.0" fill="rgb(208,62,62)" rx="2" ry="2" />
+<text  x="920.58" y="111.5" >/usr/lib/j..</text>
+</g>
+<g >
+<title>/usr/lib/jvm/java-11-openjdk/lib/libjava.so (578 samples, 35.68%)</title><rect x="586.2" y="149" width="421.0" height="15.0" fill="rgb(226,88,88)" rx="2" ry="2" />
+<text  x="589.16" y="159.5" >/usr/lib/jvm/java-11-openjdk/lib/libjava.so</text>
+</g>
+<g >
+<title>/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so (7 samples, 0.43%)</title><rect x="1184.9" y="341" width="5.1" height="15.0" fill="rgb(239,107,107)" rx="2" ry="2" />
+<text  x="1187.90" y="351.5" ></text>
+</g>
+<g >
+<title>java/lang/StringLatin1.hashCode (46 samples, 2.84%)</title><rect x="1151.4" y="197" width="33.5" height="15.0" fill="rgb(108,254,108)" rx="2" ry="2" />
+<text  x="1154.40" y="207.5" >ja..</text>
+</g>
+<g >
+<title>/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so (14 samples, 0.86%)</title><rect x="980.2" y="53" width="10.2" height="15.0" fill="rgb(214,70,70)" rx="2" ry="2" />
+<text  x="983.22" y="63.5" ></text>
+</g>
+<g >
+<title>/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so (126 samples, 7.78%)</title><rect x="1007.2" y="149" width="91.8" height="15.0" fill="rgb(244,115,115)" rx="2" ry="2" />
+<text  x="1010.17" y="159.5" >/usr/lib/j..</text>
+</g>
+</g>
+</svg>
