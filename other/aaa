@@ -1,6 +1,0 @@
-# syntax=docker/dockerfile:1
-FROM python:3.8-alpine3.13
-RUN pip3 install flask
-WORKDIR /hello-server
-COPY . /hello-server
-CMD python hello-server.py

@@ -1,6 +1,7 @@
 *.o
 *.hi
 *.exe
+.vscode
 
 /**/target
 /**/dist

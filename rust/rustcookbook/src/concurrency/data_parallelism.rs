@@ -11,8 +11,8 @@ pub fn have_a_try() {
     });
     println!("{:?}", arr);
 
-    assert!(arr.par_iter().all(|n| *n < 8));
-    assert!(arr.par_iter().all(|&n| n < 8));
+    assert!(arr.par_iter().all(|n| *n <= 8));
+    assert!(arr.par_iter().all(|&n| n <= 8));
     let res: Option<&i32> = arr.par_iter().find_any(|n| **n < 2);
     let res: Option<i32> = arr.par_iter().find_any(|&&n| n < 2).map(|x| *x);
 }
@@ -133,9 +133,9 @@ pub mod test {
     use super::*;
     #[test]
     fn test() {
-        // have_a_try();
+        have_a_try();
         // sort_parallely();
         // map_reduce();
-        make_thumbnail_test();
+        // make_thumbnail_test();
     }
 }
