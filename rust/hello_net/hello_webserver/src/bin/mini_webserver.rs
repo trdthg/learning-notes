@@ -1,11 +1,11 @@
 extern crate serde_json;
 
+use std::collections::HashMap;
 use std::fs;
 use std::io::prelude::*;
 use std::net::{TcpListener, TcpStream};
 use std::thread;
 use std::time::Duration;
-use std::collections::HashMap;
 
 use hello_webserver::ThreadPool;
 
@@ -29,7 +29,7 @@ fn main() {
     for stream in listener.incoming().take(20) {
         println!("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         let stream = stream.unwrap();
-        pool.execute(|| {
+        pool.spawn(|| {
             handle_connection(stream);
         })
     }
@@ -79,7 +79,7 @@ fn handle_connection(mut stream: TcpStream) {
             let info: &str = display_vec[1];
             body = match serde_json::from_str::<Value>(&info) {
                 Ok(map) => Some(map),
-                Err(err) => None
+                Err(err) => None,
             };
             // body = match serde_json::from_str::<Test>(&info){
             //     Ok(map) => Some(map),
@@ -94,11 +94,9 @@ fn handle_connection(mut stream: TcpStream) {
                 let infos: Vec<&str> = row.split("\r\n").collect();
                 let entrys = infos[2];
             }
-        } 
+        }
     }
     println!("1. {:?}\n2. {:?}\n3. {:?}\n", args, form, body);
-
-
 
     // println!("{}\n{}\n{:?}\n{:?}", method, url, args);
 
@@ -117,7 +115,7 @@ fn handle_connection(mut stream: TcpStream) {
     };
     let headers = r#"
         {
-            Content-Length: 34 
+            Content-Length: 34
         }
     "#;
     let contents = fs::read_to_string(filename).unwrap();

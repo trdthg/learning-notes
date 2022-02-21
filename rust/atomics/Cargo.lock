@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "learn_by_example"
+name = "atomics"
 version = "0.1.0"
